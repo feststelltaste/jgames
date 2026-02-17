@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Capybara Fluss-Lauf (Touch)</title>
+    <style>
+        /* --- CSS STIL --- */
+        :root {
+            --bg-gradient-start: #dcfce7;
+            --bg-gradient-end: #dbeafe;
+            --primary-green: #16a34a;
+            --primary-blue: #2563eb;
+            --accent-orange: #ea580c;
+            --text-dark: #1f2937;
+            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-dark);
+            overflow: hidden; /* Verhindert Scrollen beim Spielen */
+            touch-action: none; /* Verhindert Zoom/Scroll auf Mobile */
+        }
+
+        .game-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+            max-width: 850px;
+            width: 95%;
+            box-sizing: border-box;
+        }
+
+        h1 { 
+            color: #166534;
+            font-size: 1.8rem;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .subtitle {
+            color: #4b5563;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+        
+        canvas {
+            background-color: #60a5fa;
+            background-image: linear-gradient(to bottom, #60a5fa, #3b82f6);
+            border: 4px solid #dbeafe;
+            border-radius: 12px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+            display: block;
+            margin: 0 auto;
+            
+            /* Responsive Canvas */
+            width: 100%;
+            height: auto;
+            max-height: 60vh; /* Damit Platz für Buttons bleibt */
+            object-fit: contain;
+        }
+
+        /* --- TOUCH CONTROLS --- */
+        .touch-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            align-items: center;
+        }
+
+        .control-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: none;
+            font-size: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: transform 0.1s, background-color 0.2s;
+            user-select: none; /* Kein Text markieren */
+            -webkit-user-select: none; 
+            touch-action: manipulation;
+        }
+
+        .control-btn:active, .control-btn.active {
+            transform: scale(0.9);
+            box-shadow: 0 2px 3px rgba(0,0,0,0.2);
+        }
+
+        .btn-move {
+            background-color: var(--primary-green);
+            color: white;
+        }
+
+        .btn-restart {
+            background-color: var(--accent-orange);
+            color: white;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+        }
+
+        /* Desktop Info verstecken auf kleinen Screens */
+        .desktop-info {
+            display: none;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+        
+        @media (min-width: 768px) {
+            .desktop-info { display: block; }
+            .game-card { padding: 2rem; }
+            h1 { font-size: 2.5rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="game-card">
+        <h1>🦦 Capybara Fluss-Lauf 🌊</h1>
+        <div class="subtitle">Weiche den Piranhas aus!</div>
+        
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+        
+        <div class="touch-controls">
+            <button id="btn-left" class="control-btn btn-move">⬅️</button>
+            <button id="btn-restart" class="control-btn btn-restart">🔄</button>
+            <button id="btn-right" class="control-btn btn-move">➡️</button>
+        </div>
+
+        <div class="desktop-info">
+            Tastatur: Pfeiltasten oder A/D
+        </div>
+    </div>
+
+    <script>
+        // --- SETUP ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Buttons
+        const btnLeft = document.getElementById('btn-left');
+        const btnRight = document.getElementById('btn-right');
+        const btnRestart = document.getElementById('btn-restart');
+
+        // Status
+        let isGameOver = false;
+        let score = 0;
+        let gameFrame = 0;
+        let animationId;
+        
+        // Eingaben
+        const keys = {
+            ArrowLeft: false,
+            ArrowRight: false,
+            a: false,
+            d: false,
+            Space: false
+        };
+
+        // --- INPUT HANDLING (Tastatur + Touch) ---
+
+        // Tastatur
+        window.addEventListener('keydown', function(e) {
+            if (keys.hasOwnProperty(e.key) || e.code === "Space") {
+                keys[e.key] = true;
+                if (e.code === "Space" && isGameOver) restartGame();
+            }
+        });
+
+        window.addEventListener('keyup', function(e) {
+            if (keys.hasOwnProperty(e.key) || e.code === "Space") {
+                keys[e.key] = false;
+            }
+        });
+
+        // Touch / Maus für Buttons
+        function addTouchListener(btn, keyName) {
+            // Start (Touch oder Klick)
+            const startAction = (e) => {
+                e.preventDefault(); // Verhindert Maus-Emulation & Scrollen
+                keys[keyName] = true;
+                btn.classList.add('active');
+            };
+            
+            // Ende (Loslassen)
+            const endAction = (e) => {
+                e.preventDefault();
+                keys[keyName] = false;
+                btn.classList.remove('active');
+            };
+
+            btn.addEventListener('mousedown', startAction);
+            btn.addEventListener('touchstart', startAction, {passive: false});
+            
+            btn.addEventListener('mouseup', endAction);
+            btn.addEventListener('touchend', endAction, {passive: false});
+            btn.addEventListener('mouseleave', endAction); // Falls Finger den Button verlässt
+        }
+
+        // Links / Rechts verbinden
+        addTouchListener(btnLeft, 'ArrowLeft');
+        addTouchListener(btnRight, 'ArrowRight');
+
+        // Neustart Button (einfacher Klick)
+        const restartAction = (e) => {
+            e.preventDefault();
+            btnRestart.classList.add('active');
+            setTimeout(() => btnRestart.classList.remove('active'), 200);
+            restartGame();
+        };
+        btnRestart.addEventListener('click', restartAction);
+        btnRestart.addEventListener('touchstart', restartAction, {passive: false});
+
+
+        // --- SPIEL LOGIK ---
+
+        class Capybara {
+            constructor() {
+                this.width = 70;
+                this.height = 50;
+                this.x = canvas.width / 2 - this.width / 2;
+                this.y = canvas.height - this.height - 20;
+                this.speed = 9; // Etwas schneller für Mobile Gefühl
+            }
+
+            update() {
+                if ((keys.ArrowLeft || keys.a) && this.x > 0) {
+                    this.x -= this.speed;
+                }
+                if ((keys.ArrowRight || keys.d) && this.x < canvas.width - this.width) {
+                    this.x += this.speed;
+                }
+            }
+
+            draw() {
+                // Körper
+                ctx.fillStyle = '#8B5A2B'; 
+                ctx.beginPath();
+                ctx.roundRect(this.x, this.y + 10, this.width, this.height - 10, 10);
+                ctx.fill();
+
+                // Kopf
+                ctx.fillStyle = '#6F4E37';
+                ctx.beginPath();
+                ctx.roundRect(this.x + 15, this.y - 5, 40, 30, 8);
+                ctx.fill();
+
+                // Ohren
+                ctx.fillStyle = '#4A3B2A';
+                ctx.beginPath();
+                ctx.arc(this.x + 15, this.y, 6, 0, Math.PI * 2);
+                ctx.arc(this.x + 55, this.y, 6, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Nase
+                ctx.fillStyle = '#2c1b18';
+                ctx.fillRect(this.x + 30, this.y + 10, 10, 6);
+
+                // Augen
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(this.x + 22, this.y + 5);
+                ctx.lineTo(this.x + 28, this.y + 5);
+                ctx.moveTo(this.x + 42, this.y + 5);
+                ctx.lineTo(this.x + 48, this.y + 5);
+                ctx.stroke();
+            }
+        }
+
+        const enemiesArray = [];
+        class Piranha {
+            constructor() {
+                this.width = 40;
+                this.height = 40;
+                this.x = Math.random() * (canvas.width - this.width);
+                this.y = -this.height;
+                this.speed = Math.random() * 2 + 3 + (score * 0.05); 
+                this.angle = 0;
+            }
+
+            update() {
+                this.y += this.speed;
+                this.angle += 0.1;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x + this.width/2, this.y + this.height/2);
+                
+                // Roter Fisch
+                ctx.fillStyle = '#ef4444'; 
+                ctx.beginPath();
+                ctx.moveTo(0, -20);
+                ctx.lineTo(20, 0); 
+                ctx.lineTo(0, 20); 
+                ctx.lineTo(-20, 0);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Details
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.moveTo(-10, 0); ctx.lineTo(-5, 10); ctx.lineTo(0, 0);
+                ctx.moveTo(0, 0); ctx.lineTo(5, 10); ctx.lineTo(10, 0);
+                ctx.fill();
+
+                ctx.fillStyle = 'white'; 
+                ctx.beginPath();
+                ctx.arc(0, -5, 4, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = 'black'; 
+                ctx.beginPath();
+                ctx.arc(0, -5, 1.5, 0, Math.PI*2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        const bubblesArray = [];
+        class Bubble {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + Math.random() * 100;
+                this.size = Math.random() * 10 + 5;
+                this.speed = Math.random() * 1 + 0.5;
+            }
+            update() {
+                this.y -= this.speed;
+                if (this.y < -50) {
+                    this.y = canvas.height + 50;
+                    this.x = Math.random() * canvas.width;
+                }
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        function initBubbles() {
+            bubblesArray.length = 0;
+            for(let i=0; i<15; i++) bubblesArray.push(new Bubble());
+        }
+        initBubbles();
+
+        let player = new Capybara();
+
+        function handleEnemies() {
+            if (gameFrame % 50 === 0) enemiesArray.push(new Piranha());
+
+            for (let i = 0; i < enemiesArray.length; i++) {
+                enemiesArray[i].update();
+                enemiesArray[i].draw();
+
+                let padding = 12; 
+                if (
+                    player.x < enemiesArray[i].x + enemiesArray[i].width - padding &&
+                    player.x + player.width > enemiesArray[i].x + padding &&
+                    player.y < enemiesArray[i].y + enemiesArray[i].height - padding &&
+                    player.height + player.y > enemiesArray[i].y + padding
+                ) {
+                    isGameOver = true;
+                }
+
+                if (enemiesArray[i].y > canvas.height) {
+                    enemiesArray.splice(i, 1);
+                    score++;
+                    i--;
+                }
+            }
+        }
+
+        function handleUI() {
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 24px Segoe UI, sans-serif';
+            ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            ctx.shadowBlur = 4;
+            ctx.fillText('Punkte: ' + score, 25, 45);
+            ctx.shadowBlur = 0;
+
+            if (isGameOver) {
+                // Skalierung für kleine Screens anpassen
+                const overlayWidth = Math.min(600, canvas.width - 40);
+                const overlayX = (canvas.width - overlayWidth) / 2;
+
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.fillRect(overlayX, canvas.height/2 - 100, overlayWidth, 200);
+                
+                ctx.strokeStyle = '#ea580c';
+                ctx.lineWidth = 4;
+                ctx.strokeRect(overlayX, canvas.height/2 - 100, overlayWidth, 200);
+
+                ctx.textAlign = 'center';
+                
+                ctx.fillStyle = '#ea580c'; 
+                ctx.font = 'bold 40px Segoe UI, sans-serif';
+                ctx.fillText('OH NEIN!', canvas.width/2, canvas.height/2 - 20);
+                
+                ctx.fillStyle = '#1f2937';
+                ctx.font = '18px Segoe UI, sans-serif';
+                ctx.fillText('Ein Piranha hat dich erwischt!', canvas.width/2, canvas.height/2 + 20);
+                
+                ctx.fillStyle = '#16a34a';
+                ctx.font = 'bold 20px Segoe UI, sans-serif';
+                ctx.fillText('Tippe 🔄 Neustart', canvas.width/2, canvas.height/2 + 70);
+                
+                ctx.textAlign = 'left';
+            }
+        }
+
+        function restartGame() {
+            player = new Capybara();
+            enemiesArray.length = 0;
+            score = 0;
+            isGameOver = false;
+            gameFrame = 0;
+            animate();
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for(let i=0; i<bubblesArray.length; i++){
+                bubblesArray[i].update();
+                bubblesArray[i].draw();
+            }
+
+            player.update();
+            player.draw();
+            handleEnemies();
+            handleUI();
+            
+            gameFrame++;
+            
+            if (!isGameOver) requestAnimationFrame(animate);
+        }
+
+        // Start
+        animate();
+
+    </script>
+</body>
+</html>

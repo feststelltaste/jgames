@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zieh das Capybara an!</title>
+    <style>
+        /* --- CSS STYLES (Replaces Tailwind) --- */
+        :root {
+            --bg-gradient-start: #dcfce7;
+            --bg-gradient-end: #dbeafe;
+            --primary-green: #16a34a;
+            --primary-blue: #2563eb;
+            --accent-orange: #ea580c;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            min-height: 100vh;
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            color: #166534;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .theme-card {
+            background: white;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+        }
+
+        .theme-title {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        button.refresh-btn {
+            background-color: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0 auto;
+            transition: background 0.2s;
+        }
+        button.refresh-btn:hover { background-color: #15803d; }
+
+        /* Grid Layout */
+        .game-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+        
+        @media (min-width: 900px) {
+            .game-grid {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        /* Capybara Display Area */
+        .canvas-area {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Controls Area */
+        .controls-area {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .category-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .category-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: capitalize;
+        }
+
+        .item-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .item-btn {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .item-btn:hover { border-color: #86efac; }
+        
+        .item-btn.selected {
+            border-color: var(--primary-green);
+            background-color: #f0fdf4;
+            font-weight: bold;
+        }
+
+        /* Score Button & Display */
+        .score-btn {
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: background 0.2s;
+        }
+        .score-btn:hover { background-color: #1d4ed8; }
+
+        .score-display {
+            margin-top: 1.5rem;
+            background: linear-gradient(to right, #fef08a, #fed7aa);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+            display: none; /* Hidden by default */
+        }
+        
+        .score-number { font-size: 2rem; font-weight: bold; color: #9a3412; }
+        .score-text { font-size: 1.1rem; color: #c2410c; margin-top: 5px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Zieh das Capybara an! 🦫</h1>
+            <div class="theme-card">
+                <div class="theme-title" id="current-theme-display">Lade...</div>
+                <button class="refresh-btn" onclick="startNewGame()">
+                    🔄 Neues Thema
+                </button>
+            </div>
+        </header>
+
+        <div class="game-grid">
+            
+            <div class="canvas-area">
+                <div id="svg-container">
+                    </div>
+
+                <button class="score-btn" onclick="calculateScore()">
+                    🏆 Punktzahl prüfen
+                </button>
+
+                <div id="score-result" class="score-display">
+                    <div class="score-number" id="score-val">0 Punkte</div>
+                    <div class="score-text" id="score-msg"></div>
+                </div>
+            </div>
+
+            <div class="controls-area" id="items-container">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // --- GAME DATA ---
+        const THEMEN = [
+            { name: "Strandparty", icon: "🏖️" },
+            { name: "Eleganter Abend", icon: "🎩" },
+            { name: "Abenteuerzeit", icon: "🗺️" },
+            { name: "Gemütlicher Winter", icon: "❄️" },
+            { name: "Rockstar", icon: "🎸" }
+        ];
+
+        const ITEMS = {
+            hut: [
+                { id: "sonnenhut", name: "Sonnenhut", points: { "Strandparty": 100, "Gemütlicher Winter": 20 } },
+                { id: "zylinder", name: "Zylinder", points: { "Eleganter Abend": 100, "Rockstar": 30 } },
+                { id: "mütze", name: "Mütze", points: { "Gemütlicher Winter": 100, "Rockstar": 40 } },
+                { id: "forscherhut", name: "Forscherhut", points: { "Abenteuerzeit": 100 } },
+                { id: "bandana", name: "Bandana", points: { "Abenteuerzeit": 80, "Rockstar": 90 } },
+                { id: "visier", name: "Visier", points: { "Strandparty": 80 } },
+                { id: "baskenmütze", name: "Baskenmütze", points: { "Eleganter Abend": 80 } },
+                { id: "ohrenschützer", name: "Ohrenschützer", points: { "Gemütlicher Winter": 90 } },
+                { id: "irokese", name: "Irokese", points: { "Rockstar": 100 } }
+            ],
+            kleidung: [
+                { id: "badeanzug", name: "Badeanzug", points: { "Strandparty": 100 } },
+                { id: "smoking", name: "Smoking", points: { "Eleganter Abend": 100 } },
+                { id: "pullover", name: "Pullover", points: { "Gemütlicher Winter": 100 } },
+                { id: "weste", name: "Abenteuerweste", points: { "Abenteuerzeit": 100 } },
+                { id: "hawaiihemd", name: "Hawaiihemd", points: { "Strandparty": 90 } },
+                { id: "fliege", name: "Fliege", points: { "Eleganter Abend": 80 } },
+                { id: "schal", name: "Schal", points: { "Gemütlicher Winter": 90 } },
+                { id: "rucksack", name: "Rucksack", points: { "Abenteuerzeit": 80 } },
+                { id: "lederjacke", name: "Lederjacke", points: { "Rockstar": 100 } },
+                { id: "kette", name: "Halskette", points: { "Rockstar": 80 } }
+            ],
+            accessoire: [
+                { id: "sonnenbrille", name: "Sonnenbrille", points: { "Strandparty": 100, "Rockstar": 90 } },
+                { id: "monokel", name: "Monokel", points: { "Eleganter Abend": 100 } },
+                { id: "fäustlinge", name: "Fäustlinge", points: { "Gemütlicher Winter": 100 } },
+                { id: "kompass", name: "Kompass", points: { "Abenteuerzeit": 100 } },
+                { id: "schwimmring", name: "Schwimmring", points: { "Strandparty": 80 } },
+                { id: "gehstock", name: "Gehstock", points: { "Eleganter Abend": 90 } },
+                { id: "kakao", name: "Heißer Kakao", points: { "Gemütlicher Winter": 90 } },
+                { id: "fernglas", name: "Fernglas", points: { "Abenteuerzeit": 90 } },
+                { id: "gitarre", name: "Gitarre", points: { "Rockstar": 100 } }
+            ]
+        };
+
+        // --- SVG RENDER FUNCTIONS ---
+        // Helper to return SVG string based on type
+        function getHutSVG(type, x, y) {
+            switch(type) {
+                case 'sonnenhut': return `<g><ellipse cx="${x}" cy="${y}" rx="45" ry="8" fill="#F4E4C1"/><ellipse cx="${x}" cy="${y-5}" rx="25" ry="20" fill="#F4E4C1"/></g>`;
+                case 'zylinder': return `<g><rect x="${x-20}" y="${y-35}" width="40" height="30" fill="#1a1a1a"/><rect x="${x-30}" y="${y-8}" width="60" height="8" fill="#1a1a1a"/></g>`;
+                case 'mütze': return `<g><ellipse cx="${x}" cy="${y}" rx="28" ry="22" fill="#E63946"/><circle cx="${x}" cy="${y-18}" r="6" fill="#C1121F"/></g>`;
+                case 'forscherhut': return `<g><ellipse cx="${x}" cy="${y}" rx="30" ry="18" fill="#8B7355"/><rect x="${x-35}" y="${y-3}" width="70" height="6" fill="#6B5345"/></g>`;
+                case 'bandana': return `<g><path d="M ${x-30} ${y} Q ${x} ${y-15} ${x+30} ${y}" fill="#E63946"/><circle cx="${x-20}" cy="${y+2}" r="4" fill="#fff"/><circle cx="${x+20}" cy="${y+2}" r="4" fill="#fff"/></g>`;
+                case 'visier': return `<g><path d="M ${x-25} ${y} L ${x-35} ${y-8} L ${x+35} ${y-8} L ${x+25} ${y} Z" fill="#457B9D"/><rect x="${x-28}" y="${y-10}" width="56" height="8" fill="#1D3557"/></g>`;
+                case 'baskenmütze': return `<g><ellipse cx="${x}" cy="${y}" rx="32" ry="15" fill="#2A9D8F"/><circle cx="${x}" cy="${y-5}" r="5" fill="#264653"/></g>`;
+                case 'ohrenschützer': return `<g><circle cx="${x-25}" cy="${y}" r="12" fill="#F4A261"/><circle cx="${x+25}" cy="${y}" r="12" fill="#F4A261"/><path d="M ${x-25} ${y-10} Q ${x} ${y-25} ${x+25} ${y-10}" stroke="#E76F51" stroke-width="4" fill="none"/></g>`;
+                case 'irokese': return `<g><path d="M ${x-15} ${y} L ${x-10} ${y-30} L ${x-5} ${y-35} L ${x} ${y-40} L ${x+5} ${y-35} L ${x+10} ${y-30} L ${x+15} ${y}" fill="#E63946"/></g>`;
+                default: return '';
+            }
+        }
+
+        function getKleidungSVG(type, x, y) {
+            switch(type) {
+                case 'badeanzug': return `<g><rect x="${x-25}" y="${y}" width="50" height="35" rx="5" fill="#06AED5"/><circle cx="${x-15}" cy="${y+10}" r="3" fill="#fff"/><circle cx="${x+15}" cy="${y+10}" r="3" fill="#fff"/></g>`;
+                case 'smoking': return `<g><rect x="${x-30}" y="${y}" width="60" height="45" fill="#1a1a1a"/><rect x="${x-5}" y="${y}" width="10" height="45" fill="#fff"/><polygon points="${x-15},${y+10} ${x-20},${y+20} ${x-10},${y+20}" fill="#fff"/><polygon points="${x+15},${y+10} ${x+20},${y+20} ${x+10},${y+20}" fill="#fff"/></g>`;
+                case 'pullover': return `<g><rect x="${x-30}" y="${y}" width="60" height="45" rx="8" fill="#E63946"/><rect x="${x-25}" y="${y+8}" width="50" height="4" fill="#C1121F"/><rect x="${x-25}" y="${y+16}" width="50" height="4" fill="#C1121F"/></g>`;
+                case 'weste': return `<g><path d="M ${x-28} ${y} L ${x-28} ${y+40} L ${x-8} ${y+45} L ${x-8} ${y} Z" fill="#8B7355"/><path d="M ${x+28} ${y} L ${x+28} ${y+40} L ${x+8} ${y+45} L ${x+8} ${y} Z" fill="#8B7355"/><circle cx="${x-15}" cy="${y+15}" r="3" fill="#6B5345"/><circle cx="${x+15}" cy="${y+15}" r="3" fill="#6B5345"/></g>`;
+                case 'hawaiihemd': return `<g><rect x="${x-30}" y="${y}" width="60" height="45" rx="5" fill="#F4A261"/><circle cx="${x-15}" cy="${y+10}" r="5" fill="#E63946"/><circle cx="${x+10}" cy="${y+15}" r="5" fill="#E63946"/><circle cx="${x-10}" cy="${y+30}" r="5" fill="#2A9D8F"/><circle cx="${x+15}" cy="${y+35}" r="5" fill="#2A9D8F"/></g>`;
+                case 'fliege': return `<g><path d="M ${x-20} ${y+10} L ${x-8} ${y+15} L ${x-8} ${y+20} L ${x-20} ${y+25} L ${x-15} ${y+17.5} Z" fill="#E63946"/><path d="M ${x+20} ${y+10} L ${x+8} ${y+15} L ${x+8} ${y+20} L ${x+20} ${y+25} L ${x+15} ${y+17.5} Z" fill="#E63946"/><rect x="${x-5}" y="${y+15}" width="10" height="8" fill="#C1121F"/></g>`;
+                case 'schal': return `<g><path d="M ${x-25} ${y+5} Q ${x} ${y+15} ${x+25} ${y+5} L ${x+20} ${y+40} Q ${x} ${y+35} ${x-20} ${y+40} Z" fill="#F4A261" stroke="#E76F51" stroke-width="2"/></g>`;
+                case 'rucksack': return `<g><rect x="${x-20}" y="${y+5}" width="40" height="35" rx="5" fill="#2A9D8F"/><rect x="${x-15}" y="${y+10}" width="30" height="20" fill="#264653"/><circle cx="${x}" cy="${y+25}" r="3" fill="#F4A261"/></g>`;
+                case 'lederjacke': return `<g><rect x="${x-30}" y="${y}" width="60" height="45" rx="5" fill="#2d2d2d"/><rect x="${x-28}" y="${y+2}" width="56" height="41" rx="4" fill="#1a1a1a"/><line x1="${x-25}" y1="${y+5}" x2="${x-15}" y2="${y+15}" stroke="#666" stroke-width="2"/><line x1="${x+25}" y1="${y+5}" x2="${x+15}" y2="${y+15}" stroke="#666" stroke-width="2"/></g>`;
+                case 'kette': return `<g><circle cx="${x-10}" cy="${y+15}" r="5" fill="none" stroke="#C0C0C0" stroke-width="2"/><circle cx="${x+10}" cy="${y+15}" r="5" fill="none" stroke="#C0C0C0" stroke-width="2"/><circle cx="${x}" cy="${y+25}" r="5" fill="none" stroke="#C0C0C0" stroke-width="2"/><line x1="${x-7}" y1="${y+18}" x2="${x-3}" y2="${y+22}" stroke="#C0C0C0" stroke-width="2"/><line x1="${x+7}" y1="${y+18}" x2="${x+3}" y2="${y+22}" stroke="#C0C0C0" stroke-width="2"/></g>`;
+                default: return '';
+            }
+        }
+
+        function getAccessoireSVG(type, x, y) {
+            switch(type) {
+                case 'sonnenbrille': return `<g><rect x="${x-25}" y="${y}" width="20" height="12" rx="6" fill="#1a1a1a"/><rect x="${x+5}" y="${y}" width="20" height="12" rx="6" fill="#1a1a1a"/><line x1="${x-5}" y1="${y+6}" x2="${x+5}" y2="${y+6}" stroke="#1a1a1a" stroke-width="2"/></g>`;
+                case 'monokel': return `<g><circle cx="${x+15}" cy="${y}" r="10" fill="none" stroke="#C0A860" stroke-width="2"/><line x1="${x+15}" y1="${y+10}" x2="${x+15}" y2="${y+25}" stroke="#C0A860" stroke-width="2"/></g>`;
+                case 'fäustlinge': return `<g><ellipse cx="${x-20}" cy="${y+30}" rx="12" ry="15" fill="#E63946"/><ellipse cx="${x+20}" cy="${y+30}" rx="12" ry="15" fill="#E63946"/></g>`;
+                case 'kompass': return `<g><circle cx="${x}" cy="${y+25}" r="12" fill="#C0A860" stroke="#8B7355" stroke-width="2"/><line x1="${x}" y1="${y+20}" x2="${x}" y2="${y+30}" stroke="#E63946" stroke-width="2"/><polygon points="${x},${y+20} ${x-3},${y+23} ${x+3},${y+23}" fill="#E63946"/></g>`;
+                case 'schwimmring': return `<g><ellipse cx="${x}" cy="${y+20}" rx="30" ry="12" fill="none" stroke="#F4A261" stroke-width="8"/><circle cx="${x-20}" cy="${y+20}" r="3" fill="#fff"/><circle cx="${x+20}" cy="${y+20}" r="3" fill="#fff"/></g>`;
+                case 'gehstock': return `<g><path d="M ${x+20} ${y-5} Q ${x+25} ${y-10} ${x+30} ${y-5}" fill="none" stroke="#8B4513" stroke-width="3"/><line x1="${x+25}" y1="${y-5}" x2="${x+25}" y2="${y+40}" stroke="#8B4513" stroke-width="3"/></g>`;
+                case 'kakao': return `<g><rect x="${x-10}" y="${y+15}" width="20" height="25" rx="2" fill="#8B4513"/><ellipse cx="${x}" cy="${y+15}" rx="10" ry="4" fill="#6B3410"/><ellipse cx="${x}" cy="${y+13}" rx="9" ry="4" fill="#F4E4C1"/></g>`;
+                case 'fernglas': return `<g><rect x="${x-18}" y="${y}" width="14" height="18" rx="7" fill="#264653"/><rect x="${x+4}" y="${y}" width="14" height="18" rx="7" fill="#264653"/><line x1="${x-4}" y1="${y+5}" x2="${x+4}" y2="${y+5}" stroke="#2A9D8F" stroke-width="2"/></g>`;
+                case 'gitarre': return `<g><ellipse cx="${x+15}" cy="${y+25}" rx="15" ry="20" fill="#8B4513"/><rect x="${x+12}" y="${y-5}" width="6" height="30" fill="#6B5345"/><line x1="${x+13}" y1="${y}" x2="${x+13}" y2="${y+20}" stroke="#C0C0C0" stroke-width="1"/><line x1="${x+15}" y1="${y}" x2="${x+15}" y2="${y+20}" stroke="#C0C0C0" stroke-width="1"/><line x1="${x+17}" y1="${y}" x2="${x+17}" y2="${y+20}" stroke="#C0C0C0" stroke-width="1"/></g>`;
+                default: return '';
+            }
+        }
+
+        // --- GAME LOGIC ---
+        
+        // State
+        let currentTheme = null;
+        let selectedItems = {
+            hut: null,
+            kleidung: null,
+            accessoire: null
+        };
+
+        // Initialize
+        function init() {
+            renderControls();
+            startNewGame();
+        }
+
+        function startNewGame() {
+            // Random Theme
+            currentTheme = THEMEN[Math.floor(Math.random() * THEMEN.length)];
+            
+            // Reset Items
+            selectedItems = { hut: null, kleidung: null, accessoire: null };
+            
+            // Update UI
+            document.getElementById('current-theme-display').textContent = `${currentTheme.icon} Thema: ${currentTheme.name}`;
+            document.getElementById('score-result').style.display = 'none';
+            
+            updateCapybara();
+            updateButtons();
+        }
+
+        function toggleItem(category, itemId) {
+            // Toggle logic
+            if (selectedItems[category] === itemId) {
+                selectedItems[category] = null;
+            } else {
+                selectedItems[category] = itemId;
+            }
+            
+            // Hide previous score if selection changes
+            document.getElementById('score-result').style.display = 'none';
+            
+            updateCapybara();
+            updateButtons();
+        }
+
+        function updateCapybara() {
+            const svgContainer = document.getElementById('svg-container');
+            
+            // Build the SVG string
+            const capySVG = `
+            <svg width="300" height="400" viewBox="0 0 300 400">
+                <ellipse cx="150" cy="250" rx="70" ry="55" fill="#8B6F47"/>
+                <ellipse cx="150" cy="160" rx="55" ry="50" fill="#8B6F47"/>
+                <ellipse cx="125" cy="135" rx="12" ry="18" fill="#7D5F3F"/>
+                <ellipse cx="175" cy="135" rx="12" ry="18" fill="#7D5F3F"/>
+                <circle cx="135" cy="155" r="6" fill="#2d2d2d"/>
+                <circle cx="165" cy="155" r="6" fill="#2d2d2d"/>
+                <circle cx="137" cy="153" r="2" fill="#fff"/>
+                <circle cx="167" cy="153" r="2" fill="#fff"/>
+                <ellipse cx="150" cy="170" rx="8" ry="6" fill="#5d4a36"/>
+                <path d="M 145 175 Q 150 178 155 175" stroke="#5d4a36" stroke-width="2" fill="none"/>
+                <rect x="120" y="290" width="20" height="40" rx="10" fill="#7D5F3F"/>
+                <rect x="160" y="290" width="20" height="40" rx="10" fill="#7D5F3F"/>
+                
+                ${selectedItems.kleidung ? getKleidungSVG(selectedItems.kleidung, 150, 210) : ''}
+                
+                ${selectedItems.hut ? getHutSVG(selectedItems.hut, 150, 130) : ''}
+                
+                ${selectedItems.accessoire ? getAccessoireSVG(selectedItems.accessoire, 150, 155) : ''}
+            </svg>
+            `;
+            
+            svgContainer.innerHTML = capySVG;
+        }
+
+        function renderControls() {
+            const container = document.getElementById('items-container');
+            container.innerHTML = ''; // clear
+
+            const categories = ['hut', 'kleidung', 'accessoire'];
+            
+            categories.forEach(cat => {
+                // Create Category Card
+                const card = document.createElement('div');
+                card.className = 'category-card';
+                
+                const title = document.createElement('div');
+                title.className = 'category-title';
+                title.innerHTML = `✨ ${cat === 'hut' ? 'Hut' : cat === 'kleidung' ? 'Kleidung' : 'Accessoire'}`;
+                
+                const grid = document.createElement('div');
+                grid.className = 'item-grid';
+                
+                // Add buttons
+                ITEMS[cat].forEach(item => {
+                    const btn = document.createElement('button');
+                    btn.className = 'item-btn';
+                    btn.id = `btn-${cat}-${item.id}`;
+                    btn.textContent = item.name;
+                    btn.onclick = () => toggleItem(cat, item.id);
+                    grid.appendChild(btn);
+                });
+
+                card.appendChild(title);
+                card.appendChild(grid);
+                container.appendChild(card);
+            });
+        }
+
+        function updateButtons() {
+            // Remove 'selected' class from all, then add to current selection
+            const allBtns = document.querySelectorAll('.item-btn');
+            allBtns.forEach(btn => btn.classList.remove('selected'));
+
+            Object.keys(selectedItems).forEach(cat => {
+                const selectedId = selectedItems[cat];
+                if (selectedId) {
+                    const btn = document.getElementById(`btn-${cat}-${selectedId}`);
+                    if (btn) btn.classList.add('selected');
+                }
+            });
+        }
+
+        function calculateScore() {
+            let totalPoints = 0;
+            
+            Object.keys(selectedItems).forEach(cat => {
+                const itemId = selectedItems[cat];
+                if (itemId) {
+                    const itemData = ITEMS[cat].find(i => i.id === itemId);
+                    if (itemData && itemData.points) {
+                        totalPoints += (itemData.points[currentTheme.name] || 0);
+                    }
+                }
+            });
+
+            // Determine Message
+            let msg = "";
+            if (totalPoints >= 270) msg = "Perfekt! 🌟 Du bist ein Mode-Genie!";
+            else if (totalPoints >= 200) msg = "Ausgezeichnet! 🎉 Toller Stil!";
+            else if (totalPoints >= 150) msg = "Gut gemacht! 👍 Schönes Outfit!";
+            else if (totalPoints >= 100) msg = "Nicht schlecht! 😊 Weiter so!";
+            else msg = "Versuch's nochmal! 💪 Du kannst das besser!";
+
+            // Update UI
+            document.getElementById('score-val').textContent = `${totalPoints} Punkte`;
+            document.getElementById('score-msg').textContent = msg;
+            document.getElementById('score-result').style.display = 'block';
+        }
+
+        // Start the game immediately
+        init();
+
+    </script>
+</body>
+</html>
