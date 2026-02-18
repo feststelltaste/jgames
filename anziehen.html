@@ -81,6 +81,21 @@
             .game-grid {
                 grid-template-columns: 2fr 1fr;
             }
+
+            .controls-area {
+                max-height: calc(100vh - 200px);
+            }
+        }
+
+        @media (max-width: 899px) {
+            .canvas-area {
+                position: relative;
+                top: 0;
+            }
+
+            .controls-area {
+                max-height: 400px;
+            }
         }
 
         /* Capybara Display Area */
@@ -92,7 +107,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
+            position: sticky;
+            top: 20px;
         }
 
         /* Controls Area */
@@ -100,6 +117,27 @@
             display: flex;
             flex-direction: column;
             gap: 1rem;
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        .controls-area::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .controls-area::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .controls-area::-webkit-scrollbar-thumb {
+            background: #16a34a;
+            border-radius: 4px;
+        }
+
+        .controls-area::-webkit-scrollbar-thumb:hover {
+            background: #15803d;
         }
 
         .category-card {
@@ -369,68 +407,79 @@
         };
 
         // Initialize
-        function init() {
+        async function init() {
             renderControls();
-            startNewGame();
+            await startNewGame();
         }
 
-        function startNewGame() {
+        async function startNewGame() {
             // Random Theme
             currentTheme = THEMEN[Math.floor(Math.random() * THEMEN.length)];
-            
+
             // Reset Items
             selectedItems = { hut: null, kleidung: null, accessoire: null };
-            
+
             // Update UI
             document.getElementById('current-theme-display').textContent = `${currentTheme.icon} Thema: ${currentTheme.name}`;
             document.getElementById('score-result').style.display = 'none';
-            
-            updateCapybara();
+
+            await updateCapybara();
             updateButtons();
         }
 
-        function toggleItem(category, itemId) {
+        async function toggleItem(category, itemId) {
             // Toggle logic
             if (selectedItems[category] === itemId) {
                 selectedItems[category] = null;
             } else {
                 selectedItems[category] = itemId;
             }
-            
+
             // Hide previous score if selection changes
             document.getElementById('score-result').style.display = 'none';
-            
-            updateCapybara();
+
+            await updateCapybara();
             updateButtons();
         }
 
-        function updateCapybara() {
+        async function updateCapybara() {
             const svgContainer = document.getElementById('svg-container');
-            
-            // Build the SVG string
+
+            // Load the base capybara SVG if not already loaded
+            if (!window.baseCapybaraContent) {
+                try {
+                    const response = await fetch('anziehen/capybara.svg');
+                    const svgText = await response.text();
+
+                    // Extract content between <svg> tags
+                    const match = svgText.match(/<svg[^>]*>([\s\S]*)<\/svg>/);
+                    if (match) {
+                        window.baseCapybaraContent = match[1];
+                    } else {
+                        window.baseCapybaraContent = '<text x="105" y="150" text-anchor="middle">Capybara</text>';
+                    }
+                } catch (error) {
+                    console.error('Error loading capybara SVG:', error);
+                    window.baseCapybaraContent = '<text x="105" y="150" text-anchor="middle">Capybara</text>';
+                }
+            }
+
+            // Build the SVG string with base capybara and clothing layers
+            // The external SVG uses viewBox="0 0 210 297", we'll embed it with scaling
             const capySVG = `
             <svg width="300" height="400" viewBox="0 0 300 400">
-                <ellipse cx="150" cy="250" rx="70" ry="55" fill="#8B6F47"/>
-                <ellipse cx="150" cy="160" rx="55" ry="50" fill="#8B6F47"/>
-                <ellipse cx="125" cy="135" rx="12" ry="18" fill="#7D5F3F"/>
-                <ellipse cx="175" cy="135" rx="12" ry="18" fill="#7D5F3F"/>
-                <circle cx="135" cy="155" r="6" fill="#2d2d2d"/>
-                <circle cx="165" cy="155" r="6" fill="#2d2d2d"/>
-                <circle cx="137" cy="153" r="2" fill="#fff"/>
-                <circle cx="167" cy="153" r="2" fill="#fff"/>
-                <ellipse cx="150" cy="170" rx="8" ry="6" fill="#5d4a36"/>
-                <path d="M 145 175 Q 150 178 155 175" stroke="#5d4a36" stroke-width="2" fill="none"/>
-                <rect x="120" y="290" width="20" height="40" rx="10" fill="#7D5F3F"/>
-                <rect x="160" y="290" width="20" height="40" rx="10" fill="#7D5F3F"/>
-                
-                ${selectedItems.kleidung ? getKleidungSVG(selectedItems.kleidung, 150, 210) : ''}
-                
-                ${selectedItems.hut ? getHutSVG(selectedItems.hut, 150, 130) : ''}
-                
-                ${selectedItems.accessoire ? getAccessoireSVG(selectedItems.accessoire, 150, 155) : ''}
+                <g id="base-capybara" transform="translate(45, 50) scale(1.0, 1.0)">
+                    ${window.baseCapybaraContent}
+                </g>
+
+                <g id="clothing-layers">
+                    ${selectedItems.kleidung ? getKleidungSVG(selectedItems.kleidung, 150, 210) : ''}
+                    ${selectedItems.hut ? getHutSVG(selectedItems.hut, 150, 130) : ''}
+                    ${selectedItems.accessoire ? getAccessoireSVG(selectedItems.accessoire, 150, 155) : ''}
+                </g>
             </svg>
             `;
-            
+
             svgContainer.innerHTML = capySVG;
         }
 
