@@ -171,7 +171,7 @@
   function reset() {
     G = { t: 0, dist: 0, score: 0, n: 5, wl: 0, px: 0, tx: 0, camX: 0, fireAcc: 0, lossAcc: 0,
       sf: new Float32Array(MAXDRAW), form: [], zs: [], bullets: [], crates: [], gates: [], parts: [], floats: [],
-      props: makeProps(), hT: 1.5, cT: 7, bT: 35, qT: 0.5, wT: 20, zT: 7, sT: 4, hazards: [], walls: {}, wallId: 0, rescues: [], qres: null, shake: 0, flash: 0, banner: null };
+      props: makeProps(), hT: 1.5, cT: 7, bT: 35, qT: 0.5, wT: 20, zT: 7, sT: 4, hazards: [], walls: {}, wallId: 0, rescues: [], bossWins: 0, qres: null, shake: 0, flash: 0, banner: null };
     G.form = formation();
   }
   const lvl = () => 1 + G.t / 22;
@@ -468,7 +468,7 @@
     }
     G.score += Math.round(z.max * 5) + (z.type === 'boss' ? 2000 : 0);
     if (z.type === 'boss') sfx.bossDown(); else sfx.kill();
-    if (z.type === 'boss') { floatT(W / 2, H * 0.3, WD().bossDown, '#ffe08a', 28); G.shake = 0.4; }
+    if (z.type === 'boss') { floatT(W / 2, H * 0.3, WD().bossDown, '#ffe08a', 28); G.shake = 0.4; G.bossWins++; }
   }
 
   // ---------- Update ----------
@@ -519,8 +519,12 @@
     G.hazards = G.hazards.filter(h => !h.dead);
     if ((G.cT -= dt) <= 0) { spawnCrate(); G.cT = rnd(6.5, 9); }
     if ((G.bT -= dt) <= 0) {
-      const b = makeZombie('boss', rnd(-0.4, 0.4), ZMAX + 2), fp = G.n * wp()[G.wl].rate * wp()[G.wl].dmg;
-      b.hp = b.max = Math.max(b.hp, Math.round(fp * 4)) * 2;
+      // Lebenspunkte nach der Feuerkraft, die wirklich trifft (nur wer vor dem Boss steht, trifft ihn):
+      // der erste hält etwa 5 s Dauerfeuer aus, jeder besiegte Boss macht den nächsten doppelt so stark
+      const b = makeZombie('boss', rnd(-0.4, 0.4), ZMAX + 2);
+      const hit = G.form.length ? G.form.filter(so => Math.abs(so.x - G.px) < b.r).length / G.form.length : 1;
+      const fp = G.n * wp()[G.wl].rate * wp()[G.wl].dmg * hit;
+      b.hp = b.max = Math.round(Math.max(b.hp, fp * 5) * Math.pow(2, G.bossWins));
       G.banner = { text: WD().boss, life: 2.4 }; G.bT = 45; sfx.boss();
     }
 
@@ -1120,7 +1124,7 @@
     renderWorlds(); renderSpeeds(); renderModes();
     $('go').addEventListener('click', start);
   }
-  const SPEEDS = [{ n: '🐢 Langsam', f: 0.7 }, { n: 'Normal', f: 1 }, { n: '🐇 Schnell', f: 1.3 }];
+  const SPEEDS = [{ n: '🐢 Langsam', f: 0.7 }, { n: '🐕 Normal', f: 1 }, { n: '🐇 Schnell', f: 1.3 }];
   let SPEED = 1;
   try { const v = localStorage.getItem('letzte-linie-speed'); if (v !== null) SPEED = clamp(+v, 0, 2); } catch (e) {}
   function renderSpeeds() {
