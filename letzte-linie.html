@@ -49,7 +49,8 @@
   .card { max-height: 100%; overflow-y: auto; background: var(--panel); color: var(--panelfg); border-radius: 16px; padding: 22px 20px 20px; max-width: 370px; width: 100%; border: 1px solid var(--line); }
   .card h1 { font-family: "Black Ops One", Impact, sans-serif; font-weight: 400; font-size: 38px; line-height: 1; margin: 0 0 12px; }
   .card p { margin: 0 0 10px; font-size: 17px; line-height: 1.35; }
-  .card dl { margin: 0 0 18px; font-size: 16px; line-height: 1.3; }
+  .card h2 { font-size: 20px; margin: 22px 0 8px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .card dl { margin: 0; font-size: 16px; line-height: 1.3; }
   .card dt { font-weight: 600; margin-top: 8px; }
   .card dd { margin: 0; color: var(--panelmuted); }
   .big { font-family: "Black Ops One", Impact, sans-serif; font-size: 52px; line-height: 1; margin: 4px 0 8px; }
@@ -1037,18 +1038,19 @@
     cardKind = kind; const w = WD();
     let html;
     if (kind === 'start') {
-      html = '<h1>' + w.title + '</h1>' + (WORLD
-        ? '<p>Deine Kinder spritzen von selbst. Zieh mit dem Finger nach links oder rechts (am Rechner: Pfeiltasten).</p>' +
+      html = '<h1>' + w.title + '</h1>' +
+        '<div class="worlds" id="worlds"></div><div class="speeds" id="speeds"></div><div class="modes" id="modes"></div><button id="go">' + w.go + '</button>' +
+        '<h2>So geht’s</h2>' + (WORLD
+        ? '<p>Deine Kinder zielen und spritzen ganz automatisch mit ihren Wasserpistolen. Du lenkst nur die Gruppe: Wisch mit dem Finger nach links oder rechts (am Computer: Pfeiltasten).</p>' +
           '<dl><dt>Rechentore</dt><dd>Oben steht eine Aufgabe, links und rechts je ein Ergebnis. Lauf durch das richtige, dann kommen neue Kinder dazu.</dd>' +
           '<dt>Geschenke</dt><dd>Blaue Geschenke bringen eine bessere Wasserspritze, rosa Geschenke neue Kinder.</dd>' +
           '<dt>Luftballons</dt><dd>Jeder Ballon, der ankommt, schubst Kinder aus dem Spiel. Manchmal kommt ein ganzer Ballonschwarm, ab und zu ein Riesenballon mit Krone.</dd>' +
           '<dt>Matschpfützen</dt><dd>Wer hineinläuft, rutscht aus: Du verlierst 10 bis 30 % deiner Kinder, in kleinen Pfützen 1 bis 5 %. Lauf drumherum.</dd></dl>'
-        : '<p>Dein Trupp schießt von selbst. Zieh mit dem Finger nach links oder rechts, um die Spur zu wechseln (am Rechner: Pfeiltasten).</p>' +
+        : '<p>Dein Trupp zielt und schießt ganz automatisch. Du lenkst nur: Wisch mit dem Finger nach links oder rechts, um die Spur zu wechseln (am Computer: Pfeiltasten).</p>' +
           '<dl><dt>Rechentore</dt><dd>Oben erscheint eine Aufgabe, links und rechts steht je ein Ergebnis. Lauf durch das richtige, dann gibt es Soldaten.</dd>' +
           '<dt>Kisten</dt><dd>Blaue Kisten bringen die nächste Waffe, grüne Kisten Verstärkung.</dd>' +
           '<dt>Zombies</dt><dd>Jeder Kontakt kostet Soldaten. Große Horden kommen über die ganze Straßenbreite. Bosse fressen sich durch, bis sie fallen.</dd>' +
-          '<dt>Feuerstellen</dt><dd>Wer durch brennendes Öl läuft, kostet dich 10 bis 30 % deiner Soldaten, kleine Brandstellen 1 bis 5 %. Steuer den Trupp daran vorbei.</dd></dl>') +
-        '<div class="worlds" id="worlds"></div><div class="speeds" id="speeds"></div><div class="modes" id="modes"></div><button id="go">' + w.go + '</button>';
+          '<dt>Feuerstellen</dt><dd>Wer durch brennendes Öl läuft, kostet dich 10 bis 30 % deiner Soldaten, kleine Brandstellen 1 bis 5 %. Steuer den Trupp daran vorbei.</dd></dl>');
     } else {
       html = '<h1>' + w.over + '</h1>' +
         '<div class="big">' + G.score.toLocaleString('de-DE') + '</div>' +
