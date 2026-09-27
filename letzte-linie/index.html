@@ -36,7 +36,7 @@
     font-family: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
     -webkit-user-select: none; user-select: none;
   }
-  #wrap { position: relative; display: flex; flex-direction: column; height: 100%; max-width: 560px; margin: 0 auto; }
+  #wrap { position: relative; display: flex; flex-direction: column; height: 100%; max-width: 960px; margin: 0 auto; }
   #hud { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: var(--bar); }
   #score { font-family: "Black Ops One", Impact, sans-serif; font-size: 24px; letter-spacing: .5px; }
   #weapon { text-align: right; font-size: 16px; font-weight: 600; line-height: 1.1; }
@@ -139,7 +139,7 @@
     W = r.width; H = r.height;
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    U = W * 0.46; HY = H * 0.3; BY = H * 0.88;
+    U = Math.min(W * 0.46, H * 0.36); HY = H * 0.3; BY = H * 0.88;
     skyG = ctx.createLinearGradient(0, 0, 0, HY);
     skyG.addColorStop(0, '#16122a'); skyG.addColorStop(0.55, '#4a1f3a'); skyG.addColorStop(1, '#d2562e');
     fogG = ctx.createLinearGradient(0, HY, 0, HY + (BY - HY) * 0.25);
