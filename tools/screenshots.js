@@ -32,6 +32,15 @@ const GAMES = {
     await p.keyboard.press('Enter'); await wait(4000);
     await p.keyboard.down('ArrowLeft'); await wait(500); await p.keyboard.up('ArrowLeft'); await wait(2500);
   } },
+  'anziehen_2': { url: 'anziehen_2/', vw: 1000, play: async p => {
+    await p.click('#mShow'); await wait(700);
+    if (await p.$('#rGo')) { await p.click('#rGo'); await wait(900); }
+    for (let t = 0; t < 4; t++) {
+      const tabs = await p.$$('#tabs .tab'); if (tabs[t]) { await tabs[t].click(); await wait(300); }
+      const items = await p.$$('#grid .item'); if (items[1]) { await items[1].click(); await wait(400); }
+    }
+    await p.click('#tabs .tab >> nth=0'); await wait(1200);
+  } },
   'anziehen': { url: 'anziehen/', vw: 1200, play: async p => {
     await wait(800);
     await p.evaluate(() => ['btn-hut-strohhut', 'btn-kleidung-latzhose', 'btn-accessoire-mistgabel'].forEach(id => document.getElementById(id).click()));
