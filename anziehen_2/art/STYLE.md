@@ -45,7 +45,7 @@ Zeichenfläche **240 × 300**, x nach rechts, y nach unten, Mitte x = 120. „Li
 | Nase / Mund / Kinn | (120, 117) / (120, 134) / (120, 168) |
 | Wangen | (77, 127), (163, 127) |
 | Hals / Kragen | (120, 158), Breite ca. x 96 … 144 |
-| Schultern (Armansatz) | (90, 164), (150, 164) |
+| Schultern (Armansatz) | (86, 182), (154, 182) |
 | Brust / Bauch | (120, 190) / Bauch-Ellipse (120, 224) rx 33 ry 37 |
 | Körper | `anchors.bodyPath`, x 66 … 174, y 146 … 274 |
 | Pfote links (Griffpunkt) | (60, 218) – Arm hängt locker nach unten-außen |

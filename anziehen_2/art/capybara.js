@@ -19,8 +19,8 @@
 
   // Arme: Schulter -> Ellbogen (Kontrollpunkt) -> Pfote (Griffpunkt)
   var ARM = {
-    L: { s: [90, 164], c: [70, 184], p: [60, 218] },
-    R: { s: [150, 164], c: [172, 174], p: [186, 200] }
+    L: { s: [86, 182], c: [66, 196], p: [60, 218] },
+    R: { s: [154, 182], c: [176, 184], p: [186, 200] }
   };
   function armPath(a, t) {
     // Teilstück 0..t der quadratischen Kurve (de Casteljau)
@@ -133,7 +133,7 @@
       cheeks: [[77, 127], [163, 127]],
       chin: [120, 168],
       neck: [120, 158],            // Hals / Kragen, Breite ca. 96..144
-      shoulders: [[90, 164], [150, 164]],
+      shoulders: [[86, 182], [154, 182]],
       chest: [120, 190],
       belly: [120, 224],           // Bauch-Ellipse rx 33 ry 37
       bodyPath: BODY,              // Körperumriss (x 66..174, y 146..274)

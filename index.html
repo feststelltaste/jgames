@@ -45,11 +45,6 @@
   .game:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(80, 40, 90, .18); }
   .shot { position: relative; display: block; aspect-ratio: 4 / 3; background: var(--line); }
   .shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .badge {
-    position: absolute; top: 12px; left: 12px; background: var(--new); color: #fff;
-    font-weight: 600; font-size: 15px; padding: 4px 12px; border-radius: 999px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
-  }
   .body { padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
   .title { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: 700; margin: 0; }
   .desc { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.45; flex: 1; }
@@ -59,8 +54,6 @@
     min-height: 48px; padding: 10px 16px; border-radius: 14px; text-decoration: none;
     font-weight: 600; font-size: 18px; background: var(--accent); color: var(--accentfg);
   }
-  .btn.old { flex: 0 1 auto; background: transparent; color: var(--fg); border: 2px solid var(--line); font-size: 16px; }
-  .btn.old img { width: 36px; height: 27px; object-fit: cover; border-radius: 5px; }
   .btn:focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }
   footer { text-align: center; color: var(--muted); padding: 0 16px 32px; font-size: 14px; }
 </style>
@@ -75,39 +68,28 @@
 <footer>Alle Spiele laufen direkt im Browser, auf dem Handy und am Computer.</footer>
 <script>
   // Neues Spiel: hier eintragen und mit tools/screenshots.js ein In-Game-Bild nach screenshots/ legen.
-  // Hat ein Spiel eine neue Version, zeigt die Karte die neue Version und verlinkt das Original klein daneben.
   const GAMES = [
     { title: 'Letzte Linie', icon: '🎈', href: 'letzte-linie/index.html', shot: 'letzte-linie',
-      desc: 'Rechen-Shooter: Deine Gruppe spritzt Luftballons ab oder hält Zombies auf. Lauf durch das Tor mit dem richtigen Ergebnis, dann bekommst du Verstärkung.' },
-    { title: 'Brief-Puzzle', icon: '✉️', href: 'postamt/index.html', shot: 'postamt',
-      desc: 'Stelle Briefe so schnell wie möglich zusammen: Umschlag, Briefmarke und Papier müssen zum Auftrag passen.',
-      v2: { href: 'postamt_2/index.html', shot: 'postamt_2',
-        desc: 'Du arbeitest am Postschalter: Tiere zeigen dir ihren Wunschbrief. Bau ihn schnell zusammen, bevor sie ungeduldig werden, und sortier ihn ins richtige Fach.' } },
-    { title: 'Capybara Fluss-Lauf', icon: '🌊', href: 'flussfahrt/index.html', shot: 'flussfahrt',
-      desc: 'Steuere das Capybara durch den Fluss und weiche den Piranhas aus.',
-      v2: { href: 'flussfahrt_2/index.html', shot: 'flussfahrt_2',
-        desc: 'Paddle mit Capy den Fluss hinunter: Sammle Orangen, weiche Piranhas, Baumstämmen, Strudeln und Krokodilen aus und schaffe alle fünf Abschnitte.' } },
-    { title: 'Zieh das Capybara an', icon: '👒', href: 'anziehen/index.html', shot: 'anziehen',
-      desc: 'Kleide das Capybara passend zum Thema ein und sammle Punkte für den perfekten Look.',
-      v2: { href: 'anziehen_2/index.html', shot: 'anziehen_2',
-        desc: 'Modenschau in fünf Runden: Zieh das Capybara passend zum Thema an, schick es über den Laufsteg und hol dir Sterne von der Jury. Dazu ein Ankleidezimmer zum freien Spielen und ein Sammelalbum.' } }
+      desc: 'Rechen-Shooter: Deine Gruppe spritzt Luftballons ab oder hält Zombies auf. Lauf durch das Tor mit dem richtigen Ergebnis, dann bekommst du Verstärkung. Mit Plus und Minus, Einmaleins und selbst gewählten Reihen.' },
+    { title: 'Brief-Puzzle', icon: '✉️', href: 'postamt_2/index.html', shot: 'postamt_2',
+      desc: 'Du arbeitest am Postschalter: Tiere zeigen dir ihren Wunschbrief. Bau ihn schnell zusammen, bevor sie ungeduldig werden, und sortier ihn ins richtige Fach.' },
+    { title: 'Capybara Fluss-Lauf', icon: '🌊', href: 'flussfahrt_2/index.html', shot: 'flussfahrt_2',
+      desc: 'Paddle mit Capy den Fluss hinunter: Sammle Orangen, weiche Piranhas, Baumstämmen, Strudeln und Krokodilen aus und schaffe alle fünf Abschnitte.' },
+    { title: 'Zieh das Capybara an', icon: '👒', href: 'anziehen_2/index.html', shot: 'anziehen_2',
+      desc: 'Modenschau in fünf Runden: Zieh das Capybara passend zum Thema an, schick es über den Laufsteg und hol dir Sterne von der Jury. Dazu ein Ankleidezimmer zum freien Spielen und ein Sammelalbum.' }
   ];
 
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-  document.getElementById('games').innerHTML = GAMES.map(g => {
-    const v2 = g.v2, href = v2 ? v2.href : g.href, shot = v2 ? v2.shot : g.shot;
-    return '<article class="game">' +
-      '<a class="shot" href="' + esc(href) + '" tabindex="-1" aria-hidden="true">' +
-        '<img src="screenshots/' + esc(shot) + '.jpg" alt="" loading="lazy" width="800" height="600">' +
-        (v2 ? '<span class="badge">✨ Neue Version</span>' : '') + '</a>' +
+  document.getElementById('games').innerHTML = GAMES.map(g =>
+    '<article class="game">' +
+      '<a class="shot" href="' + esc(g.href) + '" tabindex="-1" aria-hidden="true">' +
+        '<img src="screenshots/' + esc(g.shot) + '.jpg" alt="" loading="lazy" width="800" height="600"></a>' +
       '<div class="body">' +
-        '<h2 class="title"><span aria-hidden="true">' + g.icon + '</span>' + esc(v2 && v2.title || g.title) + '</h2>' +
-        '<p class="desc">' + esc(v2 ? v2.desc : g.desc) + '</p>' +
-        '<div class="actions"><a class="btn" href="' + esc(href) + '">Spielen</a>' +
-          (v2 ? '<a class="btn old" href="' + esc(g.href) + '"><img src="screenshots/' + esc(g.shot) + '.jpg" alt="">Original</a>' : '') +
-        '</div>' +
-      '</div></article>';
-  }).join('');
+        '<h2 class="title"><span aria-hidden="true">' + g.icon + '</span>' + esc(g.title) + '</h2>' +
+        '<p class="desc">' + esc(g.desc) + '</p>' +
+        '<div class="actions"><a class="btn" href="' + esc(g.href) + '">Spielen</a></div>' +
+      '</div></article>'
+  ).join('');
 </script>
 </body>
 </html>

@@ -16,10 +16,6 @@ const GAMES = {
     await p.reload(); await wait(500);
     await p.click('#go'); await wait(9000);
   } },
-  'postamt': { url: 'postamt/', vw: 1000, play: async p => {
-    await p.click('text=Spiel starten'); await wait(300);
-    await p.click('#envGrid .item-btn >> nth=1'); await p.click('#stmpGrid .item-btn >> nth=1'); await wait(300);
-  } },
   'postamt_2': { url: 'postamt_2/', vw: 1000, play: async p => {
     await p.click('[data-act="play"]'); await wait(600);
     await p.click('[data-act="go"]'); await wait(4500);
@@ -27,7 +23,6 @@ const GAMES = {
     for (const i of [0, 5]) if (opts[i]) { await opts[i].click(); await wait(300); }
     await wait(600);
   } },
-  'flussfahrt': { url: 'flussfahrt/', vw: 1000, play: async p => { await p.evaluate(() => window.scrollTo(0, 0)); await wait(1500); } },
   'flussfahrt_2': { url: 'flussfahrt_2/', play: async p => {
     await p.keyboard.press('Enter'); await wait(4000);
     await p.keyboard.down('ArrowLeft'); await wait(500); await p.keyboard.up('ArrowLeft'); await wait(2500);
@@ -40,11 +35,6 @@ const GAMES = {
       const items = await p.$$('#grid .item'); if (items[1]) { await items[1].click(); await wait(400); }
     }
     await p.click('#tabs .tab >> nth=0'); await wait(1200);
-  } },
-  'anziehen': { url: 'anziehen/', vw: 1200, play: async p => {
-    await wait(800);
-    await p.evaluate(() => ['btn-hut-strohhut', 'btn-kleidung-latzhose', 'btn-accessoire-mistgabel'].forEach(id => document.getElementById(id).click()));
-    await wait(800); await p.evaluate(() => window.scrollTo(0, 0));
   } },
 };
 
