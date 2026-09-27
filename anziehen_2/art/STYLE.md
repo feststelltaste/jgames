@@ -39,9 +39,9 @@ Zeichenfläche **240 × 300**, x nach rechts, y nach unten, Mitte x = 120. „Li
 |---|---|
 | Scheitel (Kopfoberkante Mitte) | (120, 54) |
 | Hutlinie (Krempe / Hutband sitzt hier) | y = 64, Kopfbreite dort x 71 … 169 |
-| Ohren (Kreise r 8.5) | (72, 68), (168, 68) – seitlich oben am Kopf |
-| Kopfmitte | (120, 110); Kopf x 63 … 177, y 52 … 172 (oben schmaler, unten breite eckige Schnauze) |
-| Augen (rx 7, ry 8) / Augenlinie | (96, 92), (144, 92); Brauen bei y ≈ 78 |
+| Ohren (abgerundete Dreiecke) | um (80, 56), (160, 56) – oben an den Kopfecken |
+| Kopfmitte | (120, 110); Kopf rund gewölbt, x 63 … 177, y 52 … 171; Schnauze als dunkleres Ei (98…142, 100…150) |
+| Augen (Punkte r 6) / Augenlinie | (96, 94), (144, 94) |
 | Nase / Mund / Kinn | (120, 117) / (120, 134) / (120, 168) |
 | Wangen | (77, 127), (163, 127) |
 | Hals / Kragen | (120, 158), Breite ca. x 96 … 144 |

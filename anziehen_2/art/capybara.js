@@ -6,14 +6,14 @@
     FUR = '#c98c55',      // Fell
     SH = '#a96e3d',       // Fell-Schatten
     LT = '#ecc293',       // Schnauze / Bauch
-    NOSE = '#6e4529',
+    NOSE = '#9b603a',
     EAR = '#8f5a36',
     EYE = '#2e1c10',
     CHEEK = '#ff8a8a';
 
   var BODY = 'M90 146C74 164 64 194 66 226C68 258 90 274 120 274C150 274 172 258 174 226C176 194 166 164 150 146Z';
-  var HEAD = 'M120 52C146 52 162 56 166 72C171 92 177 118 177 142C177 163 158 172 120 172C82 172 63 163 63 142C63 118 69 92 74 72C78 56 94 52 120 52Z';
-  var MUZZLE = 'M84 118C84 106 100 102 120 102C140 102 156 106 156 118L161 150C161 164 145 171 120 171C95 171 79 164 79 150Z';
+  var HEAD = 'M120 52C157 52 176 76 177 108C178 142 158 170 120 171C82 170 62 142 63 108C64 76 83 52 120 52Z';
+  var MUZZLE = 'M120 100C133 100 141 112 142 126C143 142 133 150 120 150C107 150 97 142 98 126C99 112 107 100 120 100Z';
   var LEG_L = 'M86 250V280Q86 292 100 292Q113 292 113 281V250Z';
   var LEG_R = 'M127 250V281Q127 292 140 292Q154 292 154 280V250Z';
 
@@ -45,29 +45,24 @@
     '<ellipse cx="120" cy="224" rx="33" ry="37" fill="' + LT + '"/>' +
     '<path d="M104 262Q120 268 136 262" stroke="' + SH + '" stroke-width="2" fill="none" stroke-linecap="round" opacity=".6"/>' +
     '<path d="' + BODY + '" fill="none" stroke="' + O + '" stroke-width="2.5" stroke-linejoin="round"/>' +
-    // Ohren (klein, seitlich oben)
-    '<circle cx="72" cy="68" r="8.5" fill="' + FUR + '" stroke="' + O + '" stroke-width="2.5"/><circle cx="73" cy="69" r="4" fill="' + EAR + '"/>' +
-    '<circle cx="168" cy="68" r="8.5" fill="' + FUR + '" stroke="' + O + '" stroke-width="2.5"/><circle cx="167" cy="69" r="4" fill="' + EAR + '"/>' +
-    // Kopf: schmalere Stirn, nach unten breiter mit breiter, eckiger Schnauze (typisch Capybara)
+    // Ohren: klein, abgerundet dreieckig, oben an den Kopfecken (wie beim Vorbild-Capybara)
+    '<path d="M70 74Q62 50 76 45Q88 44 94 58Z" fill="' + FUR + '" stroke="' + O + '" stroke-width="2.5" stroke-linejoin="round"/><path d="M74 66Q70 53 78 51Q85 51 88 59Z" fill="' + EAR + '"/>' +
+    '<path d="M170 74Q178 50 164 45Q152 44 146 58Z" fill="' + FUR + '" stroke="' + O + '" stroke-width="2.5" stroke-linejoin="round"/><path d="M166 66Q170 53 162 51Q155 51 152 59Z" fill="' + EAR + '"/>' +
+    // Kopf: rund gewölbt
     '<path d="' + HEAD + '" fill="' + FUR + '"/>' +
-    '<path d="M171 108C175 130 176 152 162 166C170 150 171 130 167 110Z" fill="' + SH + '"/>' +
-    '<ellipse cx="102" cy="66" rx="16" ry="5" fill="#fff" opacity=".2" transform="rotate(-6 102 66)"/>' +
-    '<path d="M113 58Q116.5 52 119.5 57.5Q122.5 51.5 126 57.5" fill="none" stroke="' + O + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
-    '<path d="' + MUZZLE + '" fill="' + LT + '"/>' +
+    '<path d="M172 104C175 132 166 156 146 166C160 152 168 130 168 106Z" fill="' + SH + '" opacity=".7"/>' +
+    '<ellipse cx="102" cy="66" rx="16" ry="5" fill="#fff" opacity=".2" transform="rotate(-8 102 66)"/>' +
     '<path d="' + HEAD + '" fill="none" stroke="' + O + '" stroke-width="2.5" stroke-linejoin="round"/>' +
-    // Wangen (dezent)
-    '<ellipse cx="78" cy="132" rx="6.5" ry="4" fill="' + CHEEK + '" opacity=".45"/>' +
-    '<ellipse cx="162" cy="132" rx="6.5" ry="4" fill="' + CHEEK + '" opacity=".45"/>' +
-    // Augen: klein, entspannt halb geschlossen
-    '<ellipse cx="96" cy="92" rx="6" ry="6.5" fill="' + EYE + '"/><circle cx="94" cy="93" r="2" fill="#fff"/>' +
-    '<ellipse cx="144" cy="92" rx="6" ry="6.5" fill="' + EYE + '"/><circle cx="142" cy="93" r="2" fill="#fff"/>' +
-    '<path d="M88.5 91Q96 83 103.5 91L103.5 85L88.5 85Z" fill="' + FUR + '"/><path d="M136.5 91Q144 83 151.5 91L151.5 85L136.5 85Z" fill="' + FUR + '"/>' +
-    '<path d="M88 91Q96 86.5 104 91M136 91Q144 86.5 152 91" fill="none" stroke="' + O + '" stroke-width="2" stroke-linecap="round"/>' +
-    // Nase (breit, dunkel), Mund
-    '<path d="M100 112Q120 105 140 112Q143 122 130 126Q120 128.5 110 126Q97 122 100 112Z" fill="' + NOSE + '" stroke="' + O + '" stroke-width="1.5" stroke-linejoin="round"/>' +
-    '<ellipse cx="110" cy="117" rx="3.4" ry="1.8" fill="' + EYE + '" transform="rotate(20 110 117)"/><ellipse cx="130" cy="117" rx="3.4" ry="1.8" fill="' + EYE + '" transform="rotate(-20 130 117)"/>' +
-    '<ellipse cx="117" cy="110" rx="7" ry="1.7" fill="#fff" opacity=".4"/>' +
-    '<path d="M120 127.5V135M110 136Q115 141 120 135Q125 141 130 136" fill="none" stroke="' + O + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+    // Wangen: runde rosa Bäckchen neben der Schnauze
+    '<circle cx="80" cy="124" r="9" fill="' + CHEEK + '" opacity=".7"/>' +
+    '<circle cx="160" cy="124" r="9" fill="' + CHEEK + '" opacity=".7"/>' +
+    // Augen: kleine Punkte
+    '<circle cx="96" cy="94" r="6" fill="' + EYE + '"/><circle cx="94" cy="92" r="1.8" fill="#fff"/>' +
+    '<circle cx="144" cy="94" r="6" fill="' + EYE + '"/><circle cx="142" cy="92" r="1.8" fill="#fff"/>' +
+    // Schnauze: große, eiförmige, dunklere Fläche mit Näschen und Mund
+    '<path d="' + MUZZLE + '" fill="' + NOSE + '"/>' +
+    '<path d="M110 114L116.5 118.5L110 122M130 114L123.5 118.5L130 122" fill="none" stroke="' + O + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<path d="M120 124V131M111 133Q115.5 138 120 131Q124.5 138 129 133" fill="none" stroke="' + O + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
 
   function armSvg(a, fingers) {
     var d = armPath(a), p = a.p;
@@ -125,8 +120,8 @@
       headTop: [120, 54],          // Scheitel (Kopfoberkante Mitte)
       hatLine: 64,                 // hier sitzt die Hutkrempe / das Hutband
       hatWidth: [65, 175],         // Kopfbreite auf der Hutlinie
-      ears: [[72, 68], [168, 68]], // Ohr-Mittelpunkte, Radius 8.5
-      eyes: [[96, 92], [144, 92]], // Augen-Mittelpunkte (rx 6, ry 6.5, Lid oben)
+      ears: [[80, 56], [160, 56]], // Ohren: abgerundete Dreiecke oben an den Kopfecken
+      eyes: [[96, 94], [144, 94]], // Augen: Punkte r 6
       eyeLine: 92,
       nose: [120, 117],
       mouth: [120, 134],
