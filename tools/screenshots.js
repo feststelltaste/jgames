@@ -21,6 +21,10 @@ const GAMES = {
     await p.click('#envGrid .item-btn >> nth=1'); await p.click('#stmpGrid .item-btn >> nth=1'); await wait(300);
   } },
   'flussfahrt': { url: 'flussfahrt/', vw: 1000, play: async p => { await p.evaluate(() => window.scrollTo(0, 0)); await wait(1500); } },
+  'flussfahrt_2': { url: 'flussfahrt_2/', play: async p => {
+    await p.keyboard.press('Enter'); await wait(4000);
+    await p.keyboard.down('ArrowLeft'); await wait(500); await p.keyboard.up('ArrowLeft'); await wait(2500);
+  } },
   'anziehen': { url: 'anziehen/', vw: 1200, play: async p => {
     await wait(800);
     await p.evaluate(() => ['btn-hut-strohhut', 'btn-kleidung-latzhose', 'btn-accessoire-mistgabel'].forEach(id => document.getElementById(id).click()));
