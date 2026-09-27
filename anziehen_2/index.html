@@ -244,6 +244,12 @@
 <div id="ov" class="hidden"><div class="card" id="card"></div></div>
 <div id="toast"></div>
 <canvas id="confetti"></canvas>
+<!-- Grafiken: Capybara zuerst, dann die Teile je Kategorie (Format siehe art/STYLE.md) -->
+<script src="art/capybara.js"></script>
+<script src="art/kopf.js"></script>
+<script src="art/ober.js"></script>
+<script src="art/extra.js"></script>
+<script src="art/hand.js"></script>
 <script>
 (() => {
   'use strict';
@@ -256,9 +262,12 @@
     get(k, d) { try { const v = localStorage.getItem('anziehen2-' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem('anziehen2-' + k, JSON.stringify(v)); } catch (e) {} }
   };
+  // Grafiken kommen aus art/*.js (window.ART, Koordinaten 240x300, siehe art/STYLE.md)
+  const ART = window.ART;
+  const CAPY_TF = 'translate(86 38) scale(.95)';   // Lage der 240x300-Zeichnung in der Bühne (400x360)
+  // Übergang: alte Grafiken (210x297) aus ../anziehen/ für Teile, die es in ART noch nicht gibt
   const BASE = '../anziehen/';
-  const CAPY = BASE + 'capybara.svg';
-  const CAPY_X = 95, CAPY_Y = 38;   // Lage des Capybaras (210x297) in der Bühne (400x360)
+  const LEGACY_TF = 'translate(120 110) scale(.96) translate(-105 -79)';
 
   // ---------- Themen ----------
   const THEMEN = [
@@ -295,11 +304,8 @@
   // Zeichenreihenfolge (hinten -> vorne); "back"-Teile liegen hinter dem Capybara
   const LAYER = ['ober', 'extra', 'kopf', 'hand'];
 
-  // Neue Teile als Inline-SVG (Koordinaten 210x297 wie capybara.svg)
+  // Übergang: Teile als Inline-SVG im alten 210x297-System (entfällt, sobald sie in ART sind)
   const NEW_SVG = {
-    cowboyhut: '<path d="M52 52 Q105 70 158 52 Q150 40 132 45 L127 16 Q116 9 105 18 Q94 9 83 16 L78 45 Q60 40 52 52Z" fill="#a0672f" stroke="#4a2c12" stroke-width="2.5" stroke-linejoin="round"/><path d="M79 37 Q105 46 131 37 L132 45 Q105 54 78 45Z" fill="#4a2c12"/><circle cx="118" cy="41" r="3" fill="#ffd34d"/>',
-    zauberhut: '<path d="M60 56 Q105 72 150 56 Q140 47 128 49 L116 4 Q110 0 106 6 L82 49 Q70 47 60 56Z" fill="#3b4cc0" stroke="#1d2566" stroke-width="2.5" stroke-linejoin="round"/><path d="M82 46 Q105 55 128 46 L130 52 Q105 61 80 52Z" fill="#ffd34d"/><path d="M104 22 l2 5 5 0 -4 3 2 5 -5 -3 -5 3 2 -5 -4 -3 5 0z" fill="#ffe680"/><circle cx="96" cy="38" r="2.5" fill="#fff"/><circle cx="116" cy="34" r="2" fill="#fff"/>',
-    krone: '<path d="M76 52 L70 18 L89 34 L105 10 L121 34 L140 18 L134 52Z" fill="#ffcc33" stroke="#b07d00" stroke-width="2.5" stroke-linejoin="round"/><rect x="76" y="44" width="58" height="8" fill="#f2b400"/><circle cx="105" cy="34" r="5" fill="#e0245e"/><circle cx="88" cy="42" r="3.5" fill="#1da1f2"/><circle cx="122" cy="42" r="3.5" fill="#17bf63"/>',
     blumenkette: (() => { let s = '<path d="M68 128 Q105 175 142 128" fill="none" stroke="#2f9e44" stroke-width="3"/>'; const c = ['#ff5c8a', '#ffd23f', '#ff8c42', '#c77dff', '#ff5c8a', '#ffd23f', '#ff8c42', '#c77dff', '#ff5c8a']; for (let i = 0; i < 9; i++) { const t = i / 8, x = 68 + 74 * t, y = 128 + 47 * 2 * t * (1 - t) * 1.05; s += '<g transform="translate(' + x.toFixed(1) + ' ' + y.toFixed(1) + ')"><circle r="6.5" fill="' + c[i] + '" stroke="#fff" stroke-width="1.5"/><circle r="2.2" fill="#fff6a8"/></g>'; } return s; })(),
     sheriffstern: '<g transform="translate(105 150)"><path d="M0 -20 L6 -9 18 -10 11 0 18 10 6 9 0 20 -6 9 -18 10 -11 0 -18 -10 -6 -9Z" fill="#ffcc33" stroke="#9c6b00" stroke-width="2" stroke-linejoin="round"/><circle r="6" fill="#f2b400" stroke="#9c6b00" stroke-width="1.5"/><circle cx="0" cy="-20" r="2.5" fill="#ffcc33" stroke="#9c6b00"/><circle cx="18" cy="-10" r="2.5" fill="#ffcc33" stroke="#9c6b00"/><circle cx="18" cy="10" r="2.5" fill="#ffcc33" stroke="#9c6b00"/><circle cx="0" cy="20" r="2.5" fill="#ffcc33" stroke="#9c6b00"/><circle cx="-18" cy="10" r="2.5" fill="#ffcc33" stroke="#9c6b00"/><circle cx="-18" cy="-10" r="2.5" fill="#ffcc33" stroke="#9c6b00"/></g>',
     kamera: '<path d="M80 126 L90 156 M130 126 L120 156" stroke="#3a2a1a" stroke-width="3" fill="none"/><rect x="83" y="152" width="44" height="30" rx="5" fill="#2d2d38" stroke="#111" stroke-width="2"/><rect x="90" y="147" width="14" height="7" rx="2" fill="#2d2d38"/><circle cx="105" cy="167" r="10" fill="#555" stroke="#bbb" stroke-width="3"/><circle cx="105" cy="167" r="4.5" fill="#7fd1ff"/><rect x="115" y="156" width="7" height="5" rx="1" fill="#ffe680"/>',
@@ -312,26 +318,27 @@
     wasserball: '<g transform="translate(186 156)"><circle r="21" fill="#fff" stroke="#333" stroke-width="2"/><path d="M0 -21 A21 21 0 0 1 20 -6 L0 0Z" fill="#ff4d4d"/><path d="M20 -6 A21 21 0 0 1 12 17 L0 0Z" fill="#ffd43b"/><path d="M-12 17 A21 21 0 0 1 -20 -6 L0 0Z" fill="#339af0"/><path d="M-20 -6 A21 21 0 0 1 0 -21 L0 0Z" fill="#51cf66"/><circle r="5" fill="#fff" stroke="#333" stroke-width="1.5"/></g>'
   };
 
-  // Teile: box = Umriss im 210x297-Bild, at = [Ziel-Mitte x, y, Skalierung, Drehung]
+  // Teile: Name, Fach, Punkte je Thema. Grafik, box und back kommen aus ART.items[id].
+  // Übergang für Teile ohne ART-Grafik: box = Umriss im alten 210x297-Bild, at = [Ziel-Mitte x, y, Skalierung, Drehung]
   const ITEMS = [
     // --- Kopf ---
-    { id: 'sonnenhut', name: 'Sonnenhut', slot: 'kopf', box: [60, 55, 90, 40], at: [110, 26, 1.4, 8], p: { 'Strandparty': 100, 'Gemütlicher Winter': 20, 'Tourist': 100, 'Filmstar': 60 } },
-    { id: 'zylinder', name: 'Zylinder', slot: 'kopf', box: [75, 45, 60, 35], at: [110, 22, 1.5, 8], p: { 'Eleganter Abend': 100, 'Rockstar': 30, 'Detektiv': 90, 'Magier': 90, 'Zirkusdirektor': 100 } },
-    { id: 'mütze', name: 'Mütze', slot: 'kopf', box: [77, 56, 56, 46], at: [110, 26, 1.5, 8], p: { 'Gemütlicher Winter': 100, 'Rockstar': 40 } },
-    { id: 'forscherhut', name: 'Forscherhut', slot: 'kopf', box: [70, 62, 70, 36], at: [110, 25, 1.5, 8], p: { 'Abenteuerzeit': 100, 'Cowboy': 70, 'Wanderer': 100 } },
-    { id: 'bandana', name: 'Bandana', slot: 'kopf', box: [75, 73, 60, 14], at: [112, 48, 1.5, 12], p: { 'Abenteuerzeit': 80, 'Rockstar': 90, 'Piratenabenteuer': 60, 'Ninja': 100, 'Cowboy': 60, 'Wanderer': 70, 'Sportler': 80 } },
-    { id: 'visier', name: 'Visier', slot: 'kopf', box: [70, 70, 70, 10], at: [112, 50, 1.5, 12], p: { 'Strandparty': 80, 'Tourist': 90, 'Sportler': 100, 'Spion': 70 } },
-    { id: 'baskenmütze', name: 'Baskenmütze', slot: 'kopf', box: [73, 65, 64, 30], at: [110, 30, 1.4, 8], p: { 'Eleganter Abend': 80, 'Detektiv': 80, 'Filmstar': 50, 'Spion': 100 } },
-    { id: 'ohrenschützer', name: 'Ohrenschützer', slot: 'kopf', box: [68, 63, 74, 30], at: [110, 42, 1.6, 10], p: { 'Gemütlicher Winter': 90, 'Sportler': 50 } },
-    { id: 'irokese', name: 'Irokese', slot: 'kopf', box: [98, 1, 14, 40], at: [108, 12, 1.4, 6], p: { 'Rockstar': 100, 'Zirkusdirektor': 60 } },
-    { id: 'piratenhut', name: 'Piratenhut', slot: 'kopf', box: [69, 1, 70, 40], at: [110, 22, 1.5, 8], p: { 'Piratenabenteuer': 100 } },
-    { id: 'kochmütze', name: 'Kochmütze', slot: 'kopf', box: [80, 45, 50, 40], at: [110, 20, 1.5, 8], p: { 'Meisterkoch': 100 } },
-    { id: 'astronautenhelm', name: 'Astronautenhelm', slot: 'kopf', box: [75, 50, 60, 60], at: [106, 78, 2.05, 0], p: { 'Weltraummission': 100 } },
-    { id: 'superheldenmaske', name: 'Superheldenmaske', slot: 'kopf', box: [75, 70, 60, 20], at: [115, 78, 1.5, 17], p: { 'Superheld': 100, 'Ninja': 80, 'Spion': 40 } },
-    { id: 'strohhut', name: 'Strohhut', slot: 'kopf', box: [60, 54, 90, 36], at: [110, 28, 1.4, 8], p: { 'Bauernhof': 100, 'Strandparty': 70, 'Cowboy': 80, 'Wanderer': 60 } },
-    { id: 'cowboyhut', name: 'Cowboyhut', slot: 'kopf', svg: 'cowboyhut', box: [52, 9, 106, 55], at: [110, 24, 1.05, 8], p: { 'Cowboy': 100, 'Bauernhof': 60, 'Wanderer': 40 } },
-    { id: 'zauberhut', name: 'Zauberhut', slot: 'kopf', svg: 'zauberhut', box: [60, 0, 90, 66], at: [110, 18, 1.05, 8], p: { 'Magier': 100, 'Zirkusdirektor': 50 } },
-    { id: 'krone', name: 'Krone', slot: 'kopf', svg: 'krone', box: [70, 10, 70, 42], at: [108, 24, 1, 8], p: { 'Filmstar': 80, 'Zirkusdirektor': 60, 'Eleganter Abend': 50 } },
+    { id: 'sonnenhut', name: 'Sonnenhut', slot: 'kopf', p: { 'Strandparty': 100, 'Gemütlicher Winter': 20, 'Tourist': 100, 'Filmstar': 60 } },
+    { id: 'zylinder', name: 'Zylinder', slot: 'kopf', p: { 'Eleganter Abend': 100, 'Rockstar': 30, 'Detektiv': 90, 'Magier': 90, 'Zirkusdirektor': 100 } },
+    { id: 'mütze', name: 'Mütze', slot: 'kopf', p: { 'Gemütlicher Winter': 100, 'Rockstar': 40 } },
+    { id: 'forscherhut', name: 'Forscherhut', slot: 'kopf', p: { 'Abenteuerzeit': 100, 'Cowboy': 70, 'Wanderer': 100 } },
+    { id: 'bandana', name: 'Bandana', slot: 'kopf', p: { 'Abenteuerzeit': 80, 'Rockstar': 90, 'Piratenabenteuer': 60, 'Ninja': 100, 'Cowboy': 60, 'Wanderer': 70, 'Sportler': 80 } },
+    { id: 'visier', name: 'Visier', slot: 'kopf', p: { 'Strandparty': 80, 'Tourist': 90, 'Sportler': 100, 'Spion': 70 } },
+    { id: 'baskenmütze', name: 'Baskenmütze', slot: 'kopf', p: { 'Eleganter Abend': 80, 'Detektiv': 80, 'Filmstar': 50, 'Spion': 100 } },
+    { id: 'ohrenschützer', name: 'Ohrenschützer', slot: 'kopf', p: { 'Gemütlicher Winter': 90, 'Sportler': 50 } },
+    { id: 'irokese', name: 'Irokese', slot: 'kopf', p: { 'Rockstar': 100, 'Zirkusdirektor': 60 } },
+    { id: 'piratenhut', name: 'Piratenhut', slot: 'kopf', p: { 'Piratenabenteuer': 100 } },
+    { id: 'kochmütze', name: 'Kochmütze', slot: 'kopf', p: { 'Meisterkoch': 100 } },
+    { id: 'astronautenhelm', name: 'Astronautenhelm', slot: 'kopf', p: { 'Weltraummission': 100 } },
+    { id: 'superheldenmaske', name: 'Superheldenmaske', slot: 'kopf', p: { 'Superheld': 100, 'Ninja': 80, 'Spion': 40 } },
+    { id: 'strohhut', name: 'Strohhut', slot: 'kopf', p: { 'Bauernhof': 100, 'Strandparty': 70, 'Cowboy': 80, 'Wanderer': 60 } },
+    { id: 'cowboyhut', name: 'Cowboyhut', slot: 'kopf', p: { 'Cowboy': 100, 'Bauernhof': 60, 'Wanderer': 40 } },
+    { id: 'zauberhut', name: 'Zauberhut', slot: 'kopf', p: { 'Magier': 100, 'Zirkusdirektor': 50 } },
+    { id: 'krone', name: 'Krone', slot: 'kopf', p: { 'Filmstar': 80, 'Zirkusdirektor': 60, 'Eleganter Abend': 50 } },
     // --- Kleidung ---
     { id: 'badeanzug', dir: 'kleidung', name: 'Badeanzug', slot: 'ober', box: [50, 134, 107, 132], at: [106, 198, 1, 0], p: { 'Strandparty': 100, 'Tourist': 40, 'Sportler': 100 } },
     { id: 'smoking', dir: 'kleidung', name: 'Smoking', slot: 'ober', box: [75, 160, 60, 45], at: [108, 196, 1.8, 0], p: { 'Eleganter Abend': 100, 'Detektiv': 100, 'Magier': 90, 'Filmstar': 80, 'Zirkusdirektor': 90, 'Spion': 80 } },
@@ -389,6 +396,8 @@
   const IT = {};
   ITEMS.forEach(it => {
     IT[it.id] = it;
+    const a = ART.items[it.id];
+    if (a) { it.gfx = a; it.box = a.box; it.back = !!a.back; return; }
     it.href = it.svg
       ? 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 297" width="210" height="297">' + NEW_SVG[it.svg] + '</svg>')
       : BASE + (it.dir || DIR[it.slot]) + '/' + encodeURIComponent(it.id) + '.svg';
@@ -407,13 +416,32 @@
     const [x, y, w, h] = it.box, [tx, ty, s, r] = it.at;
     return 'translate(' + tx + ' ' + ty + ')' + (r ? ' rotate(' + r + ')' : '') + ' scale(' + s + ') translate(' + (-(x + w / 2)) + ' ' + (-(y + h / 2)) + ')';
   }
-  function itemImg(it, cls) {
-    return '<g transform="' + placeTf(it) + '"><g' + (cls ? ' class="' + cls + '"' : '') + ' data-id="' + esc(it.id) + '"><image href="' + esc(it.href) + '" width="210" height="297"/></g></g>';
+  // Ein Teil als SVG-Gruppe im 240x300-System. part: 'svg' (normale Ebene) oder 'top' (über den Armen)
+  // hrefs: optionale Ersetzung alter Bild-Pfade durch data-URIs (für den Foto-Export)
+  function partSvg(it, part, cls, hrefs) {
+    const attr = (cls ? ' class="' + cls + '"' : '') + ' data-id="' + esc(it.id) + '"';
+    if (it.gfx) { const s = it.gfx[part]; return s ? '<g' + attr + '>' + s + '</g>' : ''; }
+    if (part !== 'svg') return '';
+    const href = (hrefs && hrefs[it.href]) || it.href;
+    return '<g transform="' + LEGACY_TF + '"><g transform="' + placeTf(it) + '"><g' + attr + '><image href="' + esc(href) + '" width="210" height="297"/></g></g></g>';
+  }
+  // Capybara mit Kleidung (240x300). Ebenen: back-Teile, Capybara, Teile (LAYER), Orange, Arme, top-Teile
+  function figureSvg(worn, animId, hrefs) {
+    const cls = i => i.id === animId ? 'pop' : '';
+    const list = LAYER.map(s => worn[s] && IT[worn[s]]).filter(Boolean);
+    const hat = worn.kopf && IT[worn.kopf];
+    let s = list.filter(i => i.back).map(i => partSvg(i, 'svg', cls(i), hrefs)).join('') + ART.capy;
+    LAYER.forEach(sl => {
+      list.forEach(i => { if (i.slot === sl && !i.back) s += partSvg(i, 'svg', cls(i), hrefs); });
+      if (sl === 'kopf' && (!hat || (hat.gfx && hat.gfx.keepOrange))) s += ART.orange;
+    });
+    return s + ART.arms + list.map(i => partSvg(i, 'top', cls(i), hrefs)).join('');
   }
   function thumbSvg(it) {
     const [x, y, w, h] = it.box, m = Math.max(w, h) * 0.12 + 3, S = Math.max(w, h) + 2 * m;
     const vx = x + w / 2 - S / 2, vy = y + h / 2 - S / 2;
-    return '<svg viewBox="' + vx + ' ' + vy + ' ' + S + ' ' + S + '" aria-hidden="true"><image href="' + esc(it.href) + '" width="210" height="297"/></svg>';
+    const inner = it.gfx ? (it.gfx.svg || '') + (it.gfx.top || '') : '<image href="' + esc(it.href) + '" width="210" height="297"/>';
+    return '<svg viewBox="' + vx + ' ' + vy + ' ' + S + ' ' + S + '" aria-hidden="true">' + inner + '</svg>';
   }
 
   // ---------- Kulissen (400x360) ----------
@@ -500,12 +528,10 @@
   let uidN = 0;
   function outfitSvg(sceneKey, worn, opts) {
     opts = opts || {};
-    const uid = ++uidN, list = LAYER.map(s => worn[s] && IT[worn[s]]).filter(Boolean);
-    const back = list.filter(i => i.back), front = list.filter(i => !i.back);
-    return (opts.wrap ? '<svg viewBox="0 0 400 360" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">' : '') +
+    const uid = ++uidN;
+    return (opts.wrap ? '<svg viewBox="0 0 400 360" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"' + (opts.size ? ' width="' + opts.size[0] + '" height="' + opts.size[1] + '"' : '') + '>' : '') +
       '<g>' + sceneSvg(sceneKey, uid) + '</g>' + shadow +
-      '<g transform="translate(' + CAPY_X + ' ' + CAPY_Y + ')">' + back.map(i => itemImg(i)).join('') +
-      '<image href="' + CAPY + '" width="210" height="297"/>' + front.map(i => itemImg(i)).join('') + '</g>' +
+      '<g transform="' + CAPY_TF + '">' + figureSvg(worn, null, opts.hrefs) + '</g>' +
       (opts.wrap ? '</svg>' : '');
   }
 
@@ -621,13 +647,8 @@
 
   // ---------- Bühne ----------
   function renderStage(animId) {
-    const list = LAYER.map(s => S.worn[s] && IT[S.worn[s]]).filter(Boolean);
-    const back = list.filter(i => i.back), front = list.filter(i => !i.back);
     $('stageSvg').innerHTML = '<g id="scene">' + sceneSvg(S.scene, 0) + '</g>' + shadow +
-      '<g id="capyWalk"><g id="capyBody"><g transform="translate(' + CAPY_X + ' ' + CAPY_Y + ')">' +
-      back.map(i => itemImg(i, i.id === animId ? 'pop' : '')).join('') +
-      '<image href="' + CAPY + '" width="210" height="297"/>' +
-      front.map(i => itemImg(i, i.id === animId ? 'pop' : '')).join('') + '</g></g></g>';
+      '<g id="capyWalk"><g id="capyBody"><g transform="' + CAPY_TF + '">' + figureSvg(S.worn, animId) + '</g></g></g>';
   }
   function setBanner(icon, name, pop) {
     $('bIc').textContent = icon; $('bNm').textContent = name;
@@ -671,9 +692,9 @@
     const it = IT[id], slot = it.slot;
     audioInit();
     if (S.worn[slot] === id) {
-      const el = $('stageSvg').querySelector('[data-id="' + CSS.escape(id) + '"]');
+      const els = $('stageSvg').querySelectorAll('[data-id="' + CSS.escape(id) + '"]');
       delete S.worn[slot]; sfx.off();
-      if (el) { el.setAttribute('class', 'out'); setTimeout(() => renderStage(), 200); } else renderStage();
+      if (els.length) { els.forEach(el => el.setAttribute('class', 'out')); setTimeout(() => renderStage(), 200); } else renderStage();
     } else {
       S.worn[slot] = id; sfx.on(); renderStage(id);
       if (S.mode === 'show' && diff === 0 && pts(it, S.theme.name) >= 70) { setTimeout(sfx.good, 120); hearts(); }
@@ -710,7 +731,7 @@
     $('stage').classList.remove('runway');
     const best = store.get(bestKey(), null), got = Object.keys(album).length;
     showCard(
-      '<svg class="logo" viewBox="30 0 150 150" aria-hidden="true"><image href="' + CAPY + '" width="210" height="297"/>' + itemImg(IT['zylinder']) + itemImg(IT['fliege']) + '</svg>' +
+      '<svg class="logo" viewBox="22 2 196 196" aria-hidden="true">' + figureSvg({ kopf: 'zylinder', extra: 'fliege' }) + '</svg>' +
       '<h1>Capybara-<br>Modenschau</h1><p class="muted">Zieh das Capybara passend an!</p>' +
       '<div class="seg" id="seg">' + DIFFS.map(d => '<button data-d="' + d.id + '" aria-pressed="' + (d.id === diff) + '"><span class="e">' + d.icon + '</span>' + d.name + '</button>').join('') + '</div>' +
       '<div class="seg-desc" id="segd">' + DIFFS[diff].desc + '</div>' +
@@ -932,10 +953,16 @@
   }
 
   // ---------- Foto (PNG über Canvas) ----------
-  const imgCache = {};
   function loadImg(src) {
-    if (!imgCache[src]) imgCache[src] = new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; });
-    return imgCache[src];
+    return new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; });
+  }
+  // Übergang: alte Teil-Grafiken als data-URI einbetten (Bilder in SVG-Bildern laden sonst nicht)
+  const legacyCache = {};
+  function legacyData(href) {
+    if (href.startsWith('data:')) return Promise.resolve(href);
+    if (!legacyCache[href]) legacyCache[href] = fetch(href).then(r => r.ok ? r.text() : Promise.reject(new Error(href)))
+      .then(t => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(t));
+    return legacyCache[href];
   }
   async function photo(sceneKey, worn, caption, stars) {
     audioInit(); sfx.shutter();
@@ -945,19 +972,11 @@
       const cv = document.createElement('canvas'); cv.width = W + PAD * 2; cv.height = H + PAD + CAP;
       const c = cv.getContext('2d');
       c.fillStyle = '#ffffff'; c.fillRect(0, 0, cv.width, cv.height);
-      const sceneUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 360" width="' + W + '" height="' + H + '">' + sceneSvg(sceneKey, 99) + shadow + '</svg>');
-      const list = LAYER.map(s => worn[s] && IT[worn[s]]).filter(Boolean);
-      const order = list.filter(i => i.back).concat([null], list.filter(i => !i.back));
-      const imgs = await Promise.all([loadImg(sceneUrl)].concat(order.map(i => loadImg(i ? i.href : CAPY))));
-      c.save(); c.beginPath(); c.rect(PAD, PAD, W, H); c.clip();
-      c.drawImage(imgs[0], PAD, PAD, W, H);
-      c.translate(PAD, PAD); c.scale(K, K); c.translate(CAPY_X, CAPY_Y);
-      order.forEach((it, n) => {
-        const im = imgs[n + 1]; c.save();
-        if (it) { const [x, y, w, h] = it.box, [tx, ty, s, r] = it.at; c.translate(tx, ty); if (r) c.rotate(r * Math.PI / 180); c.scale(s, s); c.translate(-(x + w / 2), -(y + h / 2)); }
-        c.drawImage(im, 0, 0, 210, 297); c.restore();
-      });
-      c.restore();
+      const hrefs = {};
+      await Promise.all(LAYER.map(s => worn[s] && IT[worn[s]]).filter(i => i && !i.gfx).map(i => legacyData(i.href).then(d => { hrefs[i.href] = d; })));
+      const svg = outfitSvg(sceneKey, worn, { wrap: true, size: [W, H], hrefs });
+      const im = await loadImg('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg));
+      c.drawImage(im, PAD, PAD, W, H);
       c.fillStyle = '#3b2a4d'; c.textAlign = 'center'; c.font = '600 44px Fredoka, "Segoe UI", sans-serif';
       c.fillText(caption || 'Mein Capybara', cv.width / 2, H + PAD + 62);
       if (stars != null) { c.font = '34px sans-serif'; c.fillText('⭐'.repeat(stars), cv.width / 2, H + PAD + 100); }
