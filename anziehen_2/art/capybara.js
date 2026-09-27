@@ -12,15 +12,15 @@
     CHEEK = '#ff8a8a';
 
   var BODY = 'M90 146C74 164 64 194 66 226C68 258 90 274 120 274C150 274 172 258 174 226C176 194 166 164 150 146Z';
-  var HEAD = 'M120 54C148 54 170 56 175 78C179 96 180 118 176 138C172 158 152 168 120 168C88 168 68 158 64 138C60 118 61 96 65 78C70 56 92 54 120 54Z';
+  var HEAD = 'M120 51C155 51 178 66 180 96C182 138 158 169 120 169C82 169 58 138 60 96C62 66 85 51 120 51Z';
   var MUZZLE = 'M87 121C87 108 103 103 120 103C137 103 153 108 153 121L155 145C155 160 140 166 120 166C100 166 85 160 85 145Z';
   var LEG_L = 'M86 250V280Q86 292 100 292Q113 292 113 281V250Z';
   var LEG_R = 'M127 250V281Q127 292 140 292Q154 292 154 280V250Z';
 
   // Arme: Schulter -> Ellbogen (Kontrollpunkt) -> Pfote (Griffpunkt)
   var ARM = {
-    L: { s: [86, 182], c: [66, 196], p: [60, 218] },
-    R: { s: [154, 182], c: [176, 184], p: [186, 200] }
+    L: { s: [80, 175], c: [58, 190], p: [60, 218] },
+    R: { s: [160, 175], c: [182, 180], p: [186, 200] }
   };
   function armPath(a, t) {
     // Teilstück 0..t der quadratischen Kurve (de Casteljau)
@@ -50,7 +50,7 @@
     '<circle cx="171" cy="71" r="10" fill="' + FUR + '" stroke="' + O + '" stroke-width="2.5"/><circle cx="169.5" cy="72.5" r="4.8" fill="' + EAR + '"/>' +
     // Kopf (kastenförmig, breite stumpfe Schnauze)
     '<path d="' + HEAD + '" fill="' + FUR + '"/>' +
-    '<path d="M177 104C180 128 175 150 158 162C168 148 173 130 173 108Z" fill="' + SH + '"/>' +
+    '<path d="M176 106C177 132 169 152 152 163C164 149 171 131 171 108Z" fill="' + SH + '"/>' +
     '<ellipse cx="98" cy="68" rx="17" ry="6" fill="#fff" opacity=".2" transform="rotate(-6 98 68)"/>' +
     '<path d="M112 58Q116 51 119 57Q122 50 126 57" fill="none" stroke="' + O + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
     '<path d="' + MUZZLE + '" fill="' + LT + '"/>' +
@@ -133,7 +133,7 @@
       cheeks: [[77, 127], [163, 127]],
       chin: [120, 168],
       neck: [120, 158],            // Hals / Kragen, Breite ca. 96..144
-      shoulders: [[86, 182], [154, 182]],
+      shoulders: [[80, 175], [160, 175]],
       chest: [120, 190],
       belly: [120, 224],           // Bauch-Ellipse rx 33 ry 37
       bodyPath: BODY,              // Körperumriss (x 66..174, y 146..274)
