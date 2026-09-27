@@ -12,8 +12,8 @@
     CHEEK = '#ff8a8a';
 
   var BODY = 'M90 146C74 164 64 194 66 226C68 258 90 274 120 274C150 274 172 258 174 226C176 194 166 164 150 146Z';
-  var HEAD = 'M120 51C155 51 178 66 180 96C182 138 158 169 120 169C82 169 58 138 60 96C62 66 85 51 120 51Z';
-  var MUZZLE = 'M87 121C87 108 103 103 120 103C137 103 153 108 153 121L155 145C155 160 140 166 120 166C100 166 85 160 85 145Z';
+  var HEAD = 'M120 52C146 52 162 56 166 72C171 92 177 118 177 142C177 163 158 172 120 172C82 172 63 163 63 142C63 118 69 92 74 72C78 56 94 52 120 52Z';
+  var MUZZLE = 'M84 118C84 106 100 102 120 102C140 102 156 106 156 118L161 150C161 164 145 171 120 171C95 171 79 164 79 150Z';
   var LEG_L = 'M86 250V280Q86 292 100 292Q113 292 113 281V250Z';
   var LEG_R = 'M127 250V281Q127 292 140 292Q154 292 154 280V250Z';
 
@@ -45,29 +45,29 @@
     '<ellipse cx="120" cy="224" rx="33" ry="37" fill="' + LT + '"/>' +
     '<path d="M104 262Q120 268 136 262" stroke="' + SH + '" stroke-width="2" fill="none" stroke-linecap="round" opacity=".6"/>' +
     '<path d="' + BODY + '" fill="none" stroke="' + O + '" stroke-width="2.5" stroke-linejoin="round"/>' +
-    // Ohren (klein und rund)
-    '<circle cx="69" cy="71" r="10" fill="' + FUR + '" stroke="' + O + '" stroke-width="2.5"/><circle cx="70.5" cy="72.5" r="4.8" fill="' + EAR + '"/>' +
-    '<circle cx="171" cy="71" r="10" fill="' + FUR + '" stroke="' + O + '" stroke-width="2.5"/><circle cx="169.5" cy="72.5" r="4.8" fill="' + EAR + '"/>' +
-    // Kopf (kastenförmig, breite stumpfe Schnauze)
+    // Ohren (klein, seitlich oben)
+    '<circle cx="72" cy="68" r="8.5" fill="' + FUR + '" stroke="' + O + '" stroke-width="2.5"/><circle cx="73" cy="69" r="4" fill="' + EAR + '"/>' +
+    '<circle cx="168" cy="68" r="8.5" fill="' + FUR + '" stroke="' + O + '" stroke-width="2.5"/><circle cx="167" cy="69" r="4" fill="' + EAR + '"/>' +
+    // Kopf: schmalere Stirn, nach unten breiter mit breiter, eckiger Schnauze (typisch Capybara)
     '<path d="' + HEAD + '" fill="' + FUR + '"/>' +
-    '<path d="M176 106C177 132 169 152 152 163C164 149 171 131 171 108Z" fill="' + SH + '"/>' +
-    '<ellipse cx="98" cy="68" rx="17" ry="6" fill="#fff" opacity=".2" transform="rotate(-6 98 68)"/>' +
-    '<path d="M112 58Q116 51 119 57Q122 50 126 57" fill="none" stroke="' + O + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<path d="M171 108C175 130 176 152 162 166C170 150 171 130 167 110Z" fill="' + SH + '"/>' +
+    '<ellipse cx="102" cy="66" rx="16" ry="5" fill="#fff" opacity=".2" transform="rotate(-6 102 66)"/>' +
+    '<path d="M113 58Q116.5 52 119.5 57.5Q122.5 51.5 126 57.5" fill="none" stroke="' + O + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
     '<path d="' + MUZZLE + '" fill="' + LT + '"/>' +
     '<path d="' + HEAD + '" fill="none" stroke="' + O + '" stroke-width="2.5" stroke-linejoin="round"/>' +
-    // Wangen
-    '<ellipse cx="77" cy="127" rx="8.5" ry="5.5" fill="' + CHEEK + '" opacity=".6"/>' +
-    '<ellipse cx="163" cy="127" rx="8.5" ry="5.5" fill="' + CHEEK + '" opacity=".6"/>' +
-    // Augen
-    '<ellipse cx="96" cy="92" rx="7" ry="8" fill="' + EYE + '"/><circle cx="93.6" cy="88.8" r="2.8" fill="#fff"/><circle cx="98.6" cy="95.4" r="1.2" fill="#fff"/>' +
-    '<ellipse cx="144" cy="92" rx="7" ry="8" fill="' + EYE + '"/><circle cx="141.6" cy="88.8" r="2.8" fill="#fff"/><circle cx="146.6" cy="95.4" r="1.2" fill="#fff"/>' +
-    '<path d="M86 80Q92 77 98 79M142 79Q148 77 154 80" fill="none" stroke="' + O + '" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>' +
-    // Nase (groß, dunkel, typisch Capybara), Mund, Zähnchen
-    '<path d="M102 112Q120 105 138 112Q141 122 129 126Q120 128.5 111 126Q99 122 102 112Z" fill="' + NOSE + '" stroke="' + O + '" stroke-width="1.5" stroke-linejoin="round"/>' +
-    '<ellipse cx="111" cy="117" rx="3.2" ry="1.8" fill="' + EYE + '" transform="rotate(20 111 117)"/><ellipse cx="129" cy="117" rx="3.2" ry="1.8" fill="' + EYE + '" transform="rotate(-20 129 117)"/>' +
+    // Wangen (dezent)
+    '<ellipse cx="78" cy="132" rx="6.5" ry="4" fill="' + CHEEK + '" opacity=".45"/>' +
+    '<ellipse cx="162" cy="132" rx="6.5" ry="4" fill="' + CHEEK + '" opacity=".45"/>' +
+    // Augen: klein, entspannt halb geschlossen
+    '<ellipse cx="96" cy="92" rx="6" ry="6.5" fill="' + EYE + '"/><circle cx="94" cy="93" r="2" fill="#fff"/>' +
+    '<ellipse cx="144" cy="92" rx="6" ry="6.5" fill="' + EYE + '"/><circle cx="142" cy="93" r="2" fill="#fff"/>' +
+    '<path d="M88.5 91Q96 83 103.5 91L103.5 85L88.5 85Z" fill="' + FUR + '"/><path d="M136.5 91Q144 83 151.5 91L151.5 85L136.5 85Z" fill="' + FUR + '"/>' +
+    '<path d="M88 91Q96 86.5 104 91M136 91Q144 86.5 152 91" fill="none" stroke="' + O + '" stroke-width="2" stroke-linecap="round"/>' +
+    // Nase (breit, dunkel), Mund
+    '<path d="M100 112Q120 105 140 112Q143 122 130 126Q120 128.5 110 126Q97 122 100 112Z" fill="' + NOSE + '" stroke="' + O + '" stroke-width="1.5" stroke-linejoin="round"/>' +
+    '<ellipse cx="110" cy="117" rx="3.4" ry="1.8" fill="' + EYE + '" transform="rotate(20 110 117)"/><ellipse cx="130" cy="117" rx="3.4" ry="1.8" fill="' + EYE + '" transform="rotate(-20 130 117)"/>' +
     '<ellipse cx="117" cy="110" rx="7" ry="1.7" fill="#fff" opacity=".4"/>' +
-    '<rect x="116" y="134.5" width="8" height="7" rx="1.6" fill="#fff" stroke="' + O + '" stroke-width="1.2"/><path d="M120 135V141" stroke="' + O + '" stroke-width="1"/>' +
-    '<path d="M120 127.5V134M108 134Q114 140 120 134Q126 140 132 134" fill="none" stroke="' + O + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+    '<path d="M120 127.5V135M110 136Q115 141 120 135Q125 141 130 136" fill="none" stroke="' + O + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
 
   function armSvg(a, fingers) {
     var d = armPath(a), p = a.p;
@@ -125,8 +125,8 @@
       headTop: [120, 54],          // Scheitel (Kopfoberkante Mitte)
       hatLine: 64,                 // hier sitzt die Hutkrempe / das Hutband
       hatWidth: [65, 175],         // Kopfbreite auf der Hutlinie
-      ears: [[69, 71], [171, 71]], // Ohr-Mittelpunkte, Radius 10
-      eyes: [[96, 92], [144, 92]], // Augen-Mittelpunkte (rx 7, ry 8)
+      ears: [[72, 68], [168, 68]], // Ohr-Mittelpunkte, Radius 8.5
+      eyes: [[96, 92], [144, 92]], // Augen-Mittelpunkte (rx 6, ry 6.5, Lid oben)
       eyeLine: 92,
       nose: [120, 117],
       mouth: [120, 134],
