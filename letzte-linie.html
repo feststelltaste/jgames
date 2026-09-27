@@ -341,7 +341,7 @@
 
   const ri = (a, b) => Math.floor(rnd(a, b + 1));
   const MODES = [
-    { n: 'Einfach', d: 'Plus, Minus, kleines Einmaleins' },
+    { n: 'Einfach', d: 'Plus und Minus bis 20' },
     { n: 'Mittel', d: 'Plus, Minus, Mal und Geteilt bis 100' },
     { n: 'Großes Einmaleins', d: 'Nur die Reihen 10 bis 20' }
   ];
@@ -375,13 +375,13 @@
       const text = Math.random() < 0.5 ? a + ' × ' + b : b + ' × ' + a;
       return { text: text + ' = ?', res, wrong: wrongFor(res, [-a, a, -b, b, -10, 10, -1, 1]) };
     }
-    const L = lvl(), r = Math.random(); let a, b, op, res;
-    if (L < 1.8 || r < 0.4) { a = ri(2, 8 + Math.round(L * 5)); b = ri(2, 8 + Math.round(L * 5)); op = '+'; res = a + b; }
-    else if (r < 0.7) { a = ri(10, 18 + Math.round(L * 6)); b = ri(2, a - 1); op = '−'; res = a - b; }
-    else { a = ri(2, Math.min(12, 3 + Math.floor(L * 1.5))); b = ri(2, 10); op = '×'; res = a * b; }
-    const offs = op === '×' ? [-a, a, -b, b, -1, 1, 10, -10] : [-10, -2, -1, 1, 2, 10];
+    // Einfach: Plus und Minus, alle Zahlen bis 20
+    let a, b, op, res;
+    if (Math.random() < 0.5) { a = ri(1, 18); b = ri(1, 20 - a); op = '+'; res = a + b; }
+    else { a = ri(3, 20); b = ri(1, a - 1); op = '−'; res = a - b; }
+    const offs = [-3, -2, -1, 1, 2, 3];
     let wrong, guard = 0;
-    do { wrong = res + pick(offs); } while ((wrong === res || wrong < 0) && ++guard < 20);
+    do { wrong = res + pick(offs); } while ((wrong === res || wrong < 0 || wrong > 20) && ++guard < 20);
     if (wrong === res || wrong < 0) wrong = res + 1;
     return { text: a + ' ' + op + ' ' + b + ' = ?', res, wrong };
   }
