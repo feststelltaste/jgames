@@ -1,190 +1,107 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JGames - Spielesammlung</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow-x: hidden;
-        }
-
-        .screen {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            background: linear-gradient(135deg, #3b82f6 0%, #9333ea 100%);
-        }
-
-        .card {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-            padding: 40px;
-            max-width: 600px;
-            width: 100%;
-            text-align: center;
-        }
-
-        .icon-game {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 20px;
-            background: #3b82f6;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 16px;
-            color: #1f2937;
-        }
-
-        h2 {
-            font-size: 1.5rem;
-            margin-bottom: 24px;
-            color: #4b5563;
-        }
-
-        .description {
-            margin-bottom: 32px;
-            color: #374151;
-            line-height: 1.6;
-        }
-
-        .game-list {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .game-item {
-            background: #f9fafb;
-            border-radius: 8px;
-            padding: 20px;
-            transition: all 0.3s;
-            border: 2px solid transparent;
-        }
-
-        .game-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-            border-color: #3b82f6;
-        }
-
-        .game-item a {
-            text-decoration: none;
-            color: #1f2937;
-            display: block;
-        }
-
-        .game-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-        }
-
-        .game-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-        }
-
-        .game-icon {
-            font-size: 1.5rem;
-        }
-
-        .game-description {
-            color: #6b7280;
-            font-size: 0.95rem;
-            line-height: 1.5;
-            text-align: left;
-        }
-
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem;
-            }
-            .card {
-                padding: 24px;
-            }
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JGames</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff7ec; --bg2: #ffe9f3; --fg: #3b2f55; --muted: #7a6f93;
+    --card: #ffffff; --line: #f1e3ef; --accent: #ff6fb5; --accentfg: #ffffff;
+    --new: #16a34a; --shadow: 0 10px 30px rgba(80, 40, 90, .12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #17132a; --bg2: #221a3a; --fg: #f3eef8; --muted: #a79fbd;
+      --card: #231c3c; --line: #3a3058; --shadow: 0 10px 30px rgba(0, 0, 0, .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #17132a; --bg2: #221a3a; --fg: #f3eef8; --muted: #a79fbd;
+    --card: #231c3c; --line: #3a3058; --shadow: 0 10px 30px rgba(0, 0, 0, .4);
+  }
+  * { box-sizing: border-box; }
+  html { min-height: 100%; background: linear-gradient(160deg, var(--bg) 0%, var(--bg2) 100%); }
+  body {
+    margin: 0; color: var(--fg);
+    font-family: "Fredoka", "Segoe UI", system-ui, sans-serif;
+  }
+  header { text-align: center; padding: 40px 16px 24px; }
+  .logo { font-size: 56px; line-height: 1; }
+  h1 { font-size: clamp(40px, 8vw, 64px); margin: 8px 0 4px; letter-spacing: -1px; }
+  header p { margin: 0; color: var(--muted); font-size: 19px; }
+  main {
+    max-width: 1100px; margin: 0 auto; padding: 8px 16px 48px;
+    display: grid; gap: 24px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+  .game {
+    background: var(--card); border-radius: 22px; overflow: hidden; box-shadow: var(--shadow);
+    border: 1px solid var(--line); display: flex; flex-direction: column;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .game:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(80, 40, 90, .18); }
+  .shot { position: relative; display: block; aspect-ratio: 4 / 3; background: var(--line); }
+  .shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .badge {
+    position: absolute; top: 12px; left: 12px; background: var(--new); color: #fff;
+    font-weight: 600; font-size: 15px; padding: 4px 12px; border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+  }
+  .body { padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  .title { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: 700; margin: 0; }
+  .desc { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.45; flex: 1; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+  .btn {
+    flex: 1 1 auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 48px; padding: 10px 16px; border-radius: 14px; text-decoration: none;
+    font-weight: 600; font-size: 18px; background: var(--accent); color: var(--accentfg);
+  }
+  .btn.old { flex: 0 1 auto; background: transparent; color: var(--fg); border: 2px solid var(--line); font-size: 16px; }
+  .btn.old img { width: 36px; height: 27px; object-fit: cover; border-radius: 5px; }
+  .btn:focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }
+  footer { text-align: center; color: var(--muted); padding: 0 16px 32px; font-size: 14px; }
+</style>
 </head>
 <body>
-    <div class="screen">
-        <div class="card">
-            <div class="icon-game">🎮</div>
-            <h1>JGames</h1>
-            <h2>Spielesammlung</h2>
-            <p class="description">
-                Wähle ein Spiel aus der Liste unten aus, um zu spielen!
-            </p>
-            <div class="game-list">
-                <div class="game-item">
-                    <a href="postamt.html">
-                        <div class="game-header">
-                            <span class="game-title">Brief-Puzzle</span>
-                            <span class="game-icon">✉️</span>
-                        </div>
-                        <p class="game-description">
-                            Stelle Briefe so schnell wie möglich zusammen! Wähle die richtige Umschlagfarbe,
-                            Briefmarke und Papierfarbe aus, um die Aufträge zu erfüllen.
-                        </p>
-                    </a>
-                </div>
-                <div class="game-item">
-                    <a href="flussfahrt.html">
-                        <div class="game-header">
-                            <span class="game-title">Capybara Fluss-Lauf</span>
-                            <span class="game-icon">🦦</span>
-                        </div>
-                        <p class="game-description">
-                            Steuere das Capybara durch den Fluss und weiche den gefährlichen Piranhas aus!
-                            Sammle Punkte und überlebe so lange wie möglich.
-                        </p>
-                    </a>
-                </div>
-                <div class="game-item">
-                    <a href="anziehen.html">
-                        <div class="game-header">
-                            <span class="game-title">Zieh das Capybara an</span>
-                            <span class="game-icon">🦫</span>
-                        </div>
-                        <p class="game-description">
-                            Kleide das Capybara passend zum Thema ein! Wähle Hut, Kleidung und Accessoires
-                            und sammle möglichst viele Punkte für den perfekten Look.
-                        </p>
-                    </a>
-                </div>
-                <div class="game-item">
-                    <a href="letzte-linie.html">
-                        <div class="game-header">
-                            <span class="game-title">Letzte Linie</span>
-                            <span class="game-icon">🧮</span>
-                        </div>
-                        <p class="game-description">
-                            Rechen-Shooter: Dein Trupp schießt automatisch auf anrückende Gegner. Lauf durch das
-                            Tor mit dem richtigen Ergebnis, um Verstärkung zu bekommen! Wahlweise mit Zombies oder Luftballons.
-                        </p>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
+<header>
+  <div class="logo">🎮</div>
+  <h1>JGames</h1>
+  <p>Such dir ein Spiel aus!</p>
+</header>
+<main id="games"></main>
+<footer>Alle Spiele laufen direkt im Browser, auf dem Handy und am Computer.</footer>
+<script>
+  // Neues Spiel: hier eintragen und mit tools/screenshots.js ein In-Game-Bild nach screenshots/ legen.
+  // Hat ein Spiel eine neue Version, zeigt die Karte die neue Version und verlinkt das Original klein daneben.
+  const GAMES = [
+    { title: 'Letzte Linie', icon: '🎈', href: 'letzte-linie.html', shot: 'letzte-linie',
+      desc: 'Rechen-Shooter: Deine Gruppe spritzt Luftballons ab oder hält Zombies auf. Lauf durch das Tor mit dem richtigen Ergebnis, dann bekommst du Verstärkung.' },
+    { title: 'Brief-Puzzle', icon: '✉️', href: 'postamt.html', shot: 'postamt',
+      desc: 'Stelle Briefe so schnell wie möglich zusammen: Umschlag, Briefmarke und Papier müssen zum Auftrag passen.' },
+    { title: 'Capybara Fluss-Lauf', icon: '🌊', href: 'flussfahrt.html', shot: 'flussfahrt',
+      desc: 'Steuere das Capybara durch den Fluss und weiche den Piranhas aus.' },
+    { title: 'Zieh das Capybara an', icon: '👒', href: 'anziehen.html', shot: 'anziehen',
+      desc: 'Kleide das Capybara passend zum Thema ein und sammle Punkte für den perfekten Look.' }
+  ];
+
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  document.getElementById('games').innerHTML = GAMES.map(g => {
+    const v2 = g.v2, href = v2 ? v2.href : g.href, shot = v2 ? v2.shot : g.shot;
+    return '<article class="game">' +
+      '<a class="shot" href="' + esc(href) + '" tabindex="-1" aria-hidden="true">' +
+        '<img src="screenshots/' + esc(shot) + '.jpg" alt="" loading="lazy" width="800" height="600">' +
+        (v2 ? '<span class="badge">✨ Neue Version</span>' : '') + '</a>' +
+      '<div class="body">' +
+        '<h2 class="title"><span aria-hidden="true">' + g.icon + '</span>' + esc(v2 && v2.title || g.title) + '</h2>' +
+        '<p class="desc">' + esc(v2 ? v2.desc : g.desc) + '</p>' +
+        '<div class="actions"><a class="btn" href="' + esc(href) + '">Spielen</a>' +
+          (v2 ? '<a class="btn old" href="' + esc(g.href) + '"><img src="screenshots/' + esc(g.shot) + '.jpg" alt="">Original</a>' : '') +
+        '</div>' +
+      '</div></article>';
+  }).join('');
+</script>
 </body>
 </html>
