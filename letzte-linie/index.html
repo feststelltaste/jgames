@@ -358,14 +358,17 @@
   }
 
   const ri = (a, b) => Math.floor(rnd(a, b + 1));
+  // Index = gespeicherte Nummer (bleibt stabil); ORDER = Reihenfolge auf der Startkarte
   const MODES = [
-    { n: 'Einfach', d: 'Plus und Minus bis 20' },
-    { n: 'Mittel', d: 'Plus, Minus, Mal und Geteilt bis 100' },
-    { n: 'Großes Einmaleins', d: 'Reihen 11 bis 20, mal 2 bis 20' },
-    { n: 'Eigene Einmaleins-Reihen', d: '' }
+    { e: '🐣', n: 'Einfach', d: 'Plus und Minus bis 20' },
+    { e: '🐥', n: 'Mittel', d: 'Plus, Minus, Mal und Geteilt bis 100' },
+    { e: '🦁', n: 'Großes Einmaleins', d: '11 bis 20 mal 11 bis 20' },
+    { e: '✏️', n: 'Eigene Einmaleins-Reihen', d: '' },
+    { e: '🦊', n: 'Mittleres Einmaleins', d: '1 bis 10 mal 11 bis 20' }
   ];
+  const ORDER = [0, 1, 4, 2, 3];
   let MODE = 0;
-  try { MODE = clamp(+localStorage.getItem('letzte-linie-mode') || 0, 0, 3); } catch (e) {}
+  try { MODE = clamp(+localStorage.getItem('letzte-linie-mode') || 0, 0, 4); } catch (e) {}
   // Erweiterte Einstellungen: Einmaleins-Reihen 1–20 einzeln zum Üben ankreuzen
   let ROWS = [2, 3, 4, 5];
   try {
@@ -382,8 +385,8 @@
   function renderModes() {
     const box = $('modes'); if (!box) return;
     MODES[3].d = MODE === 3 ? 'Kreuz unten an, welche Reihen du üben willst' : rowsText();
-    box.innerHTML = MODES.map((m, i) =>
-      '<button class="mode" data-i="' + i + '" aria-pressed="' + (i === MODE) + '">' + m.n + '<small>' + m.d + '</small></button>').join('') +
+    box.innerHTML = ORDER.map(i => { const m = MODES[i];
+      return '<button class="mode" data-i="' + i + '" aria-pressed="' + (i === MODE) + '">' + m.e + ' ' + m.n + '<small>' + m.d + '</small></button>'; }).join('') +
       (MODE !== 3 ? '' : '<div class="adv"><div class="rows">' +
       Array.from({ length: 20 }, (_, k) => k + 1).map(r =>
         '<label class="row"><input type="checkbox" data-r="' + r + '"' + (ROWS.includes(r) ? ' checked' : '') + '><span>' + r + '</span></label>').join('') +
@@ -431,8 +434,15 @@
       const text = Math.random() < 0.5 ? a + ' × ' + b : b + ' × ' + a;
       return { text: text + ' = ?', res, wrong: wrongFor(res, [-a, a, -b, b, -1, 1]) };
     }
+    if (MODE === 4) {
+      // Mittleres Einmaleins: ein Faktor 1–10, der andere 11–20
+      const a = ri(2, 10), b = ri(11, 20), res = a * b;
+      const text = Math.random() < 0.5 ? a + ' × ' + b : b + ' × ' + a;
+      return { text: text + ' = ?', res, wrong: wrongFor(res, [-a, a, -b, b, -10, 10, -1, 1]) };
+    }
     if (MODE === 2) {
-      const a = ri(11, 20), b = ri(2, 20), res = a * b;
+      // Großes Einmaleins: beide Faktoren 11–20
+      const a = ri(11, 20), b = ri(11, 20), res = a * b;
       const text = Math.random() < 0.5 ? a + ' × ' + b : b + ' × ' + a;
       return { text: text + ' = ?', res, wrong: wrongFor(res, [-a, a, -b, b, -10, 10, -1, 1]) };
     }
@@ -1168,7 +1178,7 @@
       html = '<h1>' + w.over + '</h1>' +
         '<div class="big">' + G.score.toLocaleString('de-DE') + '</div>' +
         '<p>Punkte nach ' + Math.round(G.t) + ' Sekunden. Bestwert: ' + lastBest.toLocaleString('de-DE') + '.</p>' +
-        '<p class="muted">Rechnen: ' + MODES[MODE].n + '. Tempo: ' + SPEEDS[SPEED].n.replace(/^\S+ /, '') + '. Zuletzt: ' + wp()[G.wl].n + '.</p>' +
+        '<p class="muted">Rechnen: ' + MODES[MODE].e + ' ' + MODES[MODE].n + '. Tempo: ' + SPEEDS[SPEED].n.replace(/^\S+ /, '') + '. Zuletzt: ' + wp()[G.wl].n + '.</p>' +
         '<div class="worlds" id="worlds"></div><div class="lbl">Tempo</div><div class="speeds" id="speeds"></div><div class="lbl">Rechenaufgaben</div><div class="speeds" id="freqs"></div><div class="modes" id="modes"></div><button id="go">' + w.again + '</button>';
     }
     $('card').innerHTML = html;
