@@ -104,10 +104,10 @@
     { n: 'Regenbogenspritze', dmg: 9,   rate: 10,  c: 'rainbow' }
   ];
   const WORLDS = [
-    { title: 'Letzte Linie', unit: 'Soldaten', boss: 'Boss nähert sich', bossDown: 'Boss erledigt', wall: 'Horde!', hazard: 'im Feuer',
+    { title: 'Letzte Linie', unit: 'Soldaten', boss: 'Boss nähert sich', bossDown: 'Boss erledigt', wall: 'Horde!', hazard: 'im Feuer', rescued: 'gerettet',
       over: 'Trupp ausgelöscht', again: 'Neuer Einsatz', go: 'Einsatz starten', hurt: '#c0392b', flash: '#b3001e',
       head: '"Black Ops One", Impact, sans-serif' },
-    { title: 'Ballon-Alarm', unit: 'Kinder', boss: 'Riesenballon im Anflug', bossDown: 'Riesenballon geplatzt', wall: 'Ballonschwarm', hazard: 'im Matsch',
+    { title: 'Ballon-Alarm', unit: 'Kinder', boss: 'Riesenballon im Anflug', bossDown: 'Riesenballon geplatzt', wall: 'Ballonschwarm', hazard: 'im Matsch', rescued: 'befreit',
       over: 'Die Ballons haben gewonnen', again: 'Nochmal spielen', go: 'Los geht’s', hurt: '#ff8fc7', flash: '#ffffff',
       head: '"Fredoka", "Barlow Condensed", sans-serif' }
   ];
@@ -171,7 +171,7 @@
   function reset() {
     G = { t: 0, dist: 0, score: 0, n: 5, wl: 0, px: 0, tx: 0, camX: 0, fireAcc: 0, lossAcc: 0,
       sf: new Float32Array(MAXDRAW), form: [], zs: [], bullets: [], crates: [], gates: [], parts: [], floats: [],
-      props: makeProps(), hT: 1.5, cT: 7, bT: 35, qT: 0.5, wT: 20, zT: 7, sT: 4, hazards: [], qres: null, shake: 0, flash: 0, banner: null };
+      props: makeProps(), hT: 1.5, cT: 7, bT: 35, qT: 0.5, wT: 20, zT: 7, sT: 4, hazards: [], walls: {}, wallId: 0, rescues: [], qres: null, shake: 0, flash: 0, banner: null };
     G.form = formation();
   }
   const lvl = () => 1 + G.t / 22;
@@ -312,12 +312,22 @@
     }
   }
   function spawnWall() {
-    const L = lvl(), k = Math.round(12 + L * 3);
+    const L = lvl(), k = Math.round(12 + L * 3), id = ++G.wallId;
+    G.walls[id] = { left: k, shot: 0, k };
     for (let i = 0; i < k; i++) {
       const t = L > 2 && Math.random() < 0.15 ? 'brute' : 'normal';
-      makeZombie(t, -0.93 + 1.86 * (i + Math.random() * 0.5) / k, ZMAX + rnd(0, 2.5));
+      makeZombie(t, -0.93 + 1.86 * (i + Math.random() * 0.5) / k, ZMAX + rnd(0, 2.5)).wall = id;
     }
     G.banner = { text: WD().wall, life: 1.8 }; sfx.wall();
+  }
+  // Ist eine Horde besiegt (mindestens drei Viertel abgeschossen), warten dort 3–7 Gerettete zum Einsammeln
+  function wallGone(z, shot) {
+    const w = z.wall && G.walls[z.wall]; if (!w) return;
+    if (shot) w.shot++;
+    if (--w.left > 0) return;
+    delete G.walls[z.wall];
+    if (w.shot < w.k * 0.75) return;
+    G.rescues.push({ x: clamp(z.x, -0.75, 0.75), z: clamp(z.z, 20, ZMAX), n: ri(3, 7), w: 0.34, t: 0 });
   }
   function spawnCrate() {
     const L = lvl(), weapon = G.wl < WEAPONS.length - 1 && Math.random() < 0.55;
@@ -532,7 +542,7 @@
         if (best.hp <= 0) { best.dead = true; crateReward(best); }
       } else {
         best.hp -= b.dmg; best.hf = 0.06;
-        if (best.hp <= 0) { best.dead = true; killZombie(best); } else sfx.hit();
+        if (best.hp <= 0) { best.dead = true; killZombie(best); wallGone(best, true); } else sfx.hit();
       }
     }
 
@@ -550,10 +560,24 @@
       z.z -= (z.type === 'boss' && z.z > BOSSZ ? 7 : z.sp) * dt;
       z.x = clamp(z.x + clamp(G.px - z.x, -1, 1) * z.st * dt * (z.z < 15 ? 1.3 : 1), -0.97, 0.97);
       if (contact) {
-        z.dead = true; const P = proj(z.x, z.z);
+        z.dead = true; wallGone(z, false); const P = proj(z.x, z.z);
         burst(P.x, P.y - 10, WORLD ? z.bal : '#7a9a4f', 8); lose(z.kill); if (!running) return;
-      } else if (z.z < -2.5) z.dead = true;
+      } else if (z.z < -2.5) { z.dead = true; wallGone(z, false); }
     }
+
+    for (const r of G.rescues) {
+      r.z -= S * dt; r.t += dt;
+      if (!r.done && r.z <= 0.3) {
+        r.done = true;
+        if (Math.abs(G.px - r.x) < r.w / 2 + R) {
+          r.dead = true; G.n = Math.min(300, G.n + r.n); G.score += 100; sfx.upgrade();
+          const P = proj(r.x, 0); burst(P.x, P.y - 20, WORLD ? '#ff6fb5' : '#8fe39a', 20, 1.1);
+          floatT(P.x, P.y - U * 0.35, '+' + r.n + ' ' + WD().unit + ' ' + WD().rescued, '#8fe39a', 22);
+        }
+      }
+      if (r.z < -3) r.dead = true;
+    }
+    G.rescues = G.rescues.filter(r => !r.dead);
 
     for (const g of G.gates) {
       g.z -= S * dt; g.fl[0] = Math.max(0, g.fl[0] - dt); g.fl[1] = Math.max(0, g.fl[1] - dt);
@@ -888,6 +912,22 @@
     }
   }
 
+  function drawRescue(r) {
+    if (r.z > ZMAX || r.z < -3) return;
+    const G0 = proj(r.x, r.z), rw = r.w / 2 * U * G0.p, pulse = 0.5 + 0.5 * Math.sin(r.t * 6);
+    ctx.fillStyle = WORLD ? `rgba(255,111,181,${0.18 + pulse * 0.15})` : `rgba(143,227,154,${0.15 + pulse * 0.15})`;
+    ctx.beginPath(); ctx.ellipse(G0.x, G0.y, rw * 1.25, rw * 0.35, 0, 0, Math.PI * 2); ctx.fill();
+    for (let i = 0; i < r.n; i++) {
+      const a = i * 2.39996, d = 0.05 * Math.sqrt(i);
+      (WORLD ? drawKid : drawSoldier)({ x: r.x + Math.cos(a) * d * 1.4, z: r.z + Math.sin(a) * d * 4, i: 100 + i });
+    }
+    const top = G0.y - 0.19 * G0.p * U - 14 - pulse * 4;
+    if (G0.p * U < 20) return;
+    const txt = '+' + r.n; ctx.font = `15px ${HEAD}`;
+    const bw = ctx.measureText(txt).width + 16;
+    rr(G0.x - bw / 2, top - 10, bw, 20, 10); ctx.fillStyle = WORLD ? '#ff6fb5' : '#3f8f4a'; ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.fillText(txt, G0.x, top + 1);
+  }
   function drawHazardGround(h) {
     if (h.z > ZMAX || h.z + h.len < -3) return;
     const pts = [];
@@ -938,12 +978,13 @@
     for (const g of G.gates) if (!g.done) list.push([g.z, 1, g]);
     for (const c of G.crates) list.push([c.z, 2, c]);
     for (const z of G.zs) list.push([z.z, 3, z]);
+    for (const r of G.rescues) list.push([r.z, 6, r]);
     for (const s of G.form) list.push([s.z, 4, s]);
     if (!WORLD) for (const h of G.hazards) for (const f of h.flames) list.push([h.z + f.dz, 5, [h, f]]);
     list.sort((a, b) => b[0] - a[0]);
     for (const [, k, o] of list) {
       if (k === 0) (WORLD ? drawPropB : drawProp)(o); else if (k === 1) drawGate(o); else if (k === 2) (WORLD ? drawCrateB : drawCrate)(o);
-      else if (k === 3) (WORLD ? drawBalloon : drawZombie)(o); else if (k === 4) (WORLD ? drawKid : drawSoldier)(o); else drawFlame(o[0], o[1]);
+      else if (k === 3) (WORLD ? drawBalloon : drawZombie)(o); else if (k === 4) (WORLD ? drawKid : drawSoldier)(o); else if (k === 6) drawRescue(o); else drawFlame(o[0], o[1]);
     }
     ctx.fillStyle = WORLD ? fogB : fogG; ctx.fillRect(-20, HY - 1, W + 40, (BY - HY) * 0.25 + 1);
 
@@ -1044,12 +1085,12 @@
         ? '<p>Deine Kinder zielen und spritzen ganz automatisch mit ihren Wasserpistolen. Du lenkst nur die Gruppe: Wisch mit dem Finger nach links oder rechts (am Computer: Pfeiltasten).</p>' +
           '<dl><dt>Rechentore</dt><dd>Oben steht eine Aufgabe, links und rechts je ein Ergebnis. Lauf durch das richtige, dann kommen neue Kinder dazu.</dd>' +
           '<dt>Geschenke</dt><dd>Blaue Geschenke bringen eine bessere Wasserspritze, rosa Geschenke neue Kinder.</dd>' +
-          '<dt>Luftballons</dt><dd>Jeder Ballon, der ankommt, schubst Kinder aus dem Spiel. Manchmal kommt ein ganzer Ballonschwarm, ab und zu ein Riesenballon mit Krone.</dd>' +
+          '<dt>Luftballons</dt><dd>Jeder Ballon, der ankommt, schubst Kinder aus dem Spiel. Manchmal kommt ein ganzer Ballonschwarm: Spritzt du fast alle ab, warten dort 3 bis 7 Kinder, die du einsammeln kannst. Ab und zu kommt ein Riesenballon mit Krone.</dd>' +
           '<dt>Matschpfützen</dt><dd>Wer hineinläuft, rutscht aus: Du verlierst 10 bis 30 % deiner Kinder, in kleinen Pfützen 1 bis 5 %. Lauf drumherum.</dd></dl>'
         : '<p>Dein Trupp zielt und schießt ganz automatisch. Du lenkst nur: Wisch mit dem Finger nach links oder rechts, um die Spur zu wechseln (am Computer: Pfeiltasten).</p>' +
           '<dl><dt>Rechentore</dt><dd>Oben erscheint eine Aufgabe, links und rechts steht je ein Ergebnis. Lauf durch das richtige, dann gibt es Soldaten.</dd>' +
           '<dt>Kisten</dt><dd>Blaue Kisten bringen die nächste Waffe, grüne Kisten Verstärkung.</dd>' +
-          '<dt>Zombies</dt><dd>Jeder Kontakt kostet Soldaten. Große Horden kommen über die ganze Straßenbreite. Bosse fressen sich durch, bis sie fallen.</dd>' +
+          '<dt>Zombies</dt><dd>Jeder Kontakt kostet Soldaten. Große Horden kommen über die ganze Straßenbreite: Schießt du fast alle ab, warten dort 3 bis 7 gerettete Soldaten, die du einsammeln kannst. Bosse fressen sich durch, bis sie fallen.</dd>' +
           '<dt>Feuerstellen</dt><dd>Wer durch brennendes Öl läuft, kostet dich 10 bis 30 % deiner Soldaten, kleine Brandstellen 1 bis 5 %. Steuer den Trupp daran vorbei.</dd></dl>');
     } else {
       html = '<h1>' + w.over + '</h1>' +
