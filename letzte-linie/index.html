@@ -362,7 +362,7 @@
     { n: 'Einfach', d: 'Plus und Minus bis 20' },
     { n: 'Mittel', d: 'Plus, Minus, Mal und Geteilt bis 100' },
     { n: 'Großes Einmaleins', d: 'Reihen 11 bis 20, mal 2 bis 20' },
-    { n: 'Eigene Reihen', d: '' }
+    { n: 'Eigene Einmaleins-Reihen', d: '' }
   ];
   let MODE = 0;
   try { MODE = clamp(+localStorage.getItem('letzte-linie-mode') || 0, 0, 3); } catch (e) {}
@@ -378,7 +378,7 @@
     ROWS = [...new Set(r)].sort((a, b) => a - b); setMode(3);
     try { localStorage.setItem('letzte-linie-rows', ROWS.join(',')); } catch (e) {}
   }
-  // "Eigene Reihen": ist die Stufe gewählt, klappen darunter die Kästchen zum Ankreuzen auf
+  // "Eigene Einmaleins-Reihen": ist die Stufe gewählt, klappen darunter die Kästchen zum Ankreuzen auf
   function renderModes() {
     const box = $('modes'); if (!box) return;
     MODES[3].d = MODE === 3 ? 'Kreuz unten an, welche Reihen du üben willst' : rowsText();
