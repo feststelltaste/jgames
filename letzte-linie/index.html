@@ -580,12 +580,12 @@
     G.hazards = G.hazards.filter(h => !h.dead);
     if ((G.cT -= dt) <= 0) { spawnCrate(); G.cT = rnd(6.5, 9); }
     if ((G.bT -= dt) <= 0) {
-      // Lebenspunkte nach der Feuerkraft, die wirklich trifft (nur wer vor dem Boss steht, trifft ihn):
-      // der erste hält etwa 5 s Dauerfeuer aus, jeder besiegte Boss macht den nächsten doppelt so stark
+      // Lebenspunkte nur nach der Feuerkraft, die wirklich trifft (nur wer vor dem Boss steht, trifft ihn):
+      // der erste hält etwa 3 s gezieltes Dauerfeuer aus, jeder weitere 1 s länger (höchstens 7 s)
       const b = makeZombie('boss', rnd(-0.4, 0.4), ZMAX + 2);
       const hit = G.form.length ? G.form.filter(so => Math.abs(so.x - G.px) < b.r).length / G.form.length : 1;
       const fp = G.n * wp()[G.wl].rate * wp()[G.wl].dmg * hit;
-      b.hp = b.max = Math.round(Math.max(b.hp, fp * 5) * Math.pow(2, G.bossWins));
+      b.hp = b.max = Math.max(100, Math.round(fp * Math.min(7, 3 + G.bossWins)));
       G.banner = { text: WD().boss, life: 2.4 }; G.bT = 45; sfx.boss();
     }
 
