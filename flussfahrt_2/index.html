@@ -465,7 +465,7 @@
       G.bestCombo = Math.max(G.bestCombo, G.combo);
       const mult = Math.min(5, 1 + Math.floor((G.combo - 1) / 2)) * (G.rapid && G.rapid.warn <= 0 ? 2 : 1);
       const pts = (o.gold ? 50 : 10) * mult;
-      G.bonus += pts; G.fruits++;
+      G.bonus += pts; G.fruits++; G.eat = 0.8; G.eatGold = !!o.gold;
       if (o.gold) { sfx.gold(); sparkle(px, py, 16, '#ffe066'); } else sfx.pick(G.combo);
       sparkle(px, py, 6, '#ffb347'); ring(px, py, 0.9 * U, 0.6, 0.5);
       floatT(px, py - 10, '+' + pts + (mult > 1 ? '  ×' + mult : ''), o.gold ? '#fff08a' : '#ffffff', o.gold ? 24 : 19);
@@ -674,7 +674,7 @@
     for (const f of G.floats) { f.life -= rdt; f.y -= 34 * rdt; }
     if (G.floats.length) G.floats = G.floats.filter(f => f.life > 0);
     if (G.banner) { G.banner.life -= rdt; G.banner.t += rdt; if (G.banner.life <= 0) G.banner = null; }
-    G.shake = Math.max(0, G.shake - rdt); G.flash = Math.max(0, G.flash - rdt);
+    G.shake = Math.max(0, G.shake - rdt); G.flash = Math.max(0, G.flash - rdt); G.eat = Math.max(0, (G.eat || 0) - rdt);
     for (const c of clouds) {
       c.y += (sc * 0.55) + 8 * rdt; c.x += 0.004 * rdt;
       if (c.y - c.r > H) { c.y = -c.r - rnd(0, 200); c.x = Math.random(); c.r = rnd(140, 260); }
@@ -733,8 +733,14 @@
     g.fillStyle = hg; rr(-0.3 * s, -0.9 * s, 0.6 * s, 0.7 * s, 0.27 * s); g.fill();
     g.fillStyle = '#3a2414'; rr(-0.14 * s, -0.88 * s, 0.28 * s, 0.11 * s, 0.055 * s); g.fill();
     g.fillStyle = 'rgba(255,255,255,.35)'; ell(-0.05 * s, -0.855 * s, 0.04 * s, 0.015 * s); g.fill();
+    // Kauen: nach dem Einsammeln einer Orange blähen sich die Backen im Takt
+    const eat = o.eat || 0, chew = eat > 0 ? Math.abs(Math.sin((1 - eat) * Math.PI * 5)) : 0;
     g.fillStyle = 'rgba(255,120,110,.38)';
-    for (const sd of [-1, 1]) { ell(sd * 0.23 * s, -0.45 * s, 0.06 * s, 0.045 * s); g.fill(); }
+    for (const sd of [-1, 1]) { ell(sd * (0.23 + chew * 0.03) * s, -0.45 * s, (0.06 + chew * 0.03) * s, (0.045 + chew * 0.02) * s); g.fill(); }
+    if (eat > 0) {
+      g.fillStyle = 'rgba(176,118,63,.55)';
+      for (const sd of [-1, 1]) { ell(sd * 0.29 * s, -0.62 * s, chew * 0.06 * s, chew * 0.09 * s); g.fill(); }
+    }
     const ey = -0.58 * s, eyes = o.eyes || 'open';
     g.fillStyle = '#1d130c'; g.strokeStyle = '#1d130c'; g.lineWidth = Math.max(1.2, 0.035 * s);
     for (const sd of [-1, 1]) {
@@ -749,7 +755,14 @@
         g.beginPath(); g.arc(ex, ey + 0.02 * s, 0.05 * s, Math.PI * 1.1, Math.PI * 1.9); g.stroke();
       } else { g.beginPath(); g.moveTo(ex - 0.05 * s, ey); g.lineTo(ex + 0.05 * s, ey); g.stroke(); }
     }
-    if (o.orange !== false) drawOrange(0, -0.4 * s, s * 0.62, false);
+    if (eat > 0) {
+      // Orangenstück am Maul, das beim Kauen kleiner wird, dazu ein paar Saftspritzer
+      drawOrange(0, -0.98 * s + chew * 0.03 * s, s * 0.85 * (0.3 + 0.7 * eat), !!o.eatGold);
+      if (chew > 0.7) {
+        g.fillStyle = o.eatGold ? 'rgba(255,220,80,.9)' : 'rgba(255,160,40,.9)';
+        for (const sd of [-1, 1]) { circ(sd * 0.16 * s, -1.0 * s - chew * 0.04 * s, 0.025 * s); g.fill(); }
+      }
+    }
     g.restore();
   }
   function drawOrange(x, y, s, gold) {
@@ -1139,7 +1152,7 @@
     else if (G.inv > 0) { if (Math.sin(T * 26) > 0.2) alpha = 0.35; eyes = G.inv > DIFFS[DIFF].inv - 0.5 ? 'hurt' : 'open'; }
     else if (G.comboT > 1.9 && G.combo > 0) eyes = 'happy';
     else if (T % 3.7 < 0.13) eyes = 'blink';
-    drawCapy(x, y, U * 1.12, { rot, paddle: P.paddle, eyes, alpha, scale });
+    drawCapy(x, y, U * 1.12, { rot, paddle: P.paddle, eyes, alpha, scale, eat: (G.eat || 0) / 0.8, eatGold: G.eatGold });
     if (G.shield > 0) {
       g.strokeStyle = 'rgba(190,255,170,' + (0.45 + 0.2 * Math.sin(T * 5)) + ')'; g.lineWidth = Math.max(2, 0.06 * U);
       circ(x, y - 0.1 * U, 0.95 * U); g.stroke();
