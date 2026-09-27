@@ -396,15 +396,13 @@
     const g = it.gfx && it.gfx[part];
     return g ? '<g' + (cls ? ' class="' + cls + '"' : '') + ' data-id="' + esc(it.id) + '">' + g + '</g>' : '';
   }
-  // Capybara mit Kleidung (240x300). Ebenen: back-Teile, Capybara, Teile (LAYER), Orange, Arme, top-Teile
+  // Capybara mit Kleidung (240x300). Ebenen: back-Teile, Capybara, Teile (LAYER), Arme, top-Teile
   function figureSvg(worn, animId) {
     const cls = i => i.id === animId ? 'pop' : '';
     const list = LAYER.map(s => worn[s] && IT[worn[s]]).filter(Boolean);
-    const hat = worn.kopf && IT[worn.kopf];
     let s = list.filter(i => i.back).map(i => partSvg(i, 'svg', cls(i))).join('') + ART.capy;
     LAYER.forEach(sl => {
       list.forEach(i => { if (i.slot === sl && !i.back) s += partSvg(i, 'svg', cls(i)); });
-      if (sl === 'kopf' && (!hat || (hat.gfx && hat.gfx.keepOrange))) s += ART.orange;
     });
     return s + ART.arms + list.map(i => partSvg(i, 'top', cls(i))).join('');
   }
