@@ -28,7 +28,7 @@ ART.items['<id>'] = {
 
 - `<id>` = exakt die `id` aus `ITEMS` in `index.html` (inkl. Umlaute, z. B. `fäustlinge`, `säbel`).
   Name, Fach und Punkte bleiben in `index.html`; `box`/`back` kommen nur noch aus `ART`.
-- Gibt es für eine id einen `ART`-Eintrag, wird die alte Grafik aus `../anziehen/` nicht mehr benutzt.
+- Alle Teile kommen aus `ART.items`; die alten Grafiken aus `../anziehen/` werden nicht mehr benutzt.
 - `index.html` muss für neue Teile nicht angepasst werden.
 
 ## Koordinatensystem und Anker (`ART.anchors`)
