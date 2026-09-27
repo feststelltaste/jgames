@@ -80,7 +80,7 @@
 <script>
 (() => {
   const cv = document.getElementById('c'), ctx = cv.getContext('2d'), $ = id => document.getElementById(id);
-  const ZMAX = 60, D = 7, S = 7, MAXDRAW = 60;
+  const ZMAX = 60, D = 7, S = 7, MAXDRAW = 60, BOSSZ = 12;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const rnd = (a, b) => a + Math.random() * (b - a);
   const pick = a => a[Math.floor(Math.random() * a.length)];
@@ -170,16 +170,18 @@
   function reset() {
     G = { t: 0, dist: 0, score: 0, n: 5, wl: 0, px: 0, tx: 0, camX: 0, fireAcc: 0, lossAcc: 0,
       sf: new Float32Array(MAXDRAW), form: [], zs: [], bullets: [], crates: [], gates: [], parts: [], floats: [],
-      props: makeProps(), hT: 1.5, cT: 7, bT: 35, qT: 0.5, wT: 20, zT: 7, hazards: [], qres: null, shake: 0, flash: 0, banner: null };
+      props: makeProps(), hT: 1.5, cT: 7, bT: 35, qT: 0.5, wT: 20, zT: 7, sT: 4, hazards: [], qres: null, shake: 0, flash: 0, banner: null };
     G.form = formation();
   }
   const lvl = () => 1 + G.t / 22;
-  const squadR = () => 0.055 * Math.sqrt(Math.max(0, Math.min(G.n, MAXDRAW) - 1));
+  // Ab 150 Leuten zieht sich der Trupp in die Breite und nach hinten, dann trifft Matsch/Feuer fast immer ein paar
+  const spread = () => G.n >= 150 ? 1 + Math.min(0.7, (G.n - 150) / 200) : 1;
+  const squadR = () => 0.055 * Math.sqrt(Math.max(0, Math.min(G.n, MAXDRAW) - 1)) * spread();
   function formation() {
-    const m = Math.min(G.n, MAXDRAW), out = [];
+    const m = Math.min(G.n, MAXDRAW), out = [], sp = spread();
     for (let i = 0; i < m; i++) {
-      const r = 0.055 * Math.sqrt(i), a = i * 2.39996;
-      out.push({ x: G.px + r * Math.cos(a), z: r * Math.sin(a) * 5, i });
+      const r = 0.055 * Math.sqrt(i), a = i * 2.39996, z = r * Math.sin(a) * 5;
+      out.push({ x: G.px + r * Math.cos(a) * sp, z: z < 0 ? z * sp : z, i });
     }
     return out;
   }
@@ -383,9 +385,9 @@
     return { text: a + ' ' + op + ' ' + b + ' = ?', res, wrong };
   }
   const gateNear = () => G.gates.some(g => g.z > ZMAX - 12) || G.hazards.some(h => h.z > ZMAX - 10);
-  function spawnHazard() {
-    const L = lvl(), w = rnd(0.35, 0.55 + Math.min(0.35, L * 0.05)), len = rnd(2.5, 4);
-    const h = { x: rnd(-1 + w / 2, 1 - w / 2), w, len, z: ZMAX + 2, done: false, flames: [] };
+  function spawnHazard(small) {
+    const L = lvl(), w = small ? rnd(0.14, 0.24) : rnd(0.35, 0.55 + Math.min(0.35, L * 0.05)), len = small ? rnd(1.4, 2.2) : rnd(2.5, 4);
+    const h = { x: rnd(-1 + w / 2, 1 - w / 2), w, len, z: ZMAX + 2, done: false, small, flames: [] };
     const n = Math.round(w * 12);
     for (let i = 0; i < n; i++) h.flames.push({ dx: rnd(-0.42, 0.42) * w, dz: rnd(0.15, 0.85) * len, ph: rnd(0, 6), h: rnd(0.8, 1.3) });
     G.hazards.push(h);
@@ -484,14 +486,16 @@
     if ((G.hT -= dt) <= 0) { spawnHorde(); G.hT = Math.max(0.9, 2.4 - L * 0.15) * rnd(0.8, 1.2); }
     if ((G.wT -= dt) <= 0) { spawnWall(); G.wT = rnd(20, 28); }
     if ((G.qT -= dt) <= 0) { if (gateNear()) G.qT = 1.5; else { spawnQuiz(); G.qT = rnd(8, 11); } }
-    if ((G.zT -= dt) <= 0) { if (gateNear()) G.zT = 1.2; else { spawnHazard(); G.zT = rnd(6, 9); } }
+    if ((G.zT -= dt) <= 0) { if (gateNear()) G.zT = 1.2; else { spawnHazard(false); G.zT = rnd(6, 9); } }
+    if ((G.sT -= dt) <= 0) { if (gateNear()) G.sT = 1; else { spawnHazard(true); G.sT = rnd(3, 5); } }
     for (const h of G.hazards) {
       h.z -= S * dt;
       if (!h.done && h.z + h.len / 2 <= 0) {
         h.done = true;
         const inside = G.form.filter(so => Math.abs(so.x - h.x) < h.w / 2).length;
-        // Verlust 10–30 % des Trupps, je nachdem wie viele hineinlaufen; der letzte Mann bleibt
-        const k = inside > 0 && G.form.length ? Math.min(G.n - 1, Math.max(1, Math.round(G.n * (0.1 + 0.2 * inside / G.form.length)))) : 0;
+        // Verlust je nachdem wie viele hineinlaufen: große Stellen 10–30 %, kleine 1–5 %; der letzte Mann bleibt
+        const lo = h.small ? 0.01 : 0.1, hi = h.small ? 0.05 : 0.3;
+        const k = inside > 0 && G.form.length ? Math.min(G.n - 1, Math.max(1, Math.round(G.n * (lo + (hi - lo) * inside / G.form.length)))) : 0;
         if (k > 0) {
           const P = proj(h.x, 0);
           burst(P.x, P.y - 10, WORLD ? '#8b5e3c' : '#ff8a2b', 10 + k * 2);
@@ -503,7 +507,11 @@
     }
     G.hazards = G.hazards.filter(h => !h.dead);
     if ((G.cT -= dt) <= 0) { spawnCrate(); G.cT = rnd(6.5, 9); }
-    if ((G.bT -= dt) <= 0) { makeZombie('boss', rnd(-0.4, 0.4), ZMAX + 2); G.banner = { text: WD().boss, life: 2.4 }; G.bT = 45; sfx.boss(); }
+    if ((G.bT -= dt) <= 0) {
+      const b = makeZombie('boss', rnd(-0.4, 0.4), ZMAX + 2), fp = G.n * wp()[G.wl].rate * wp()[G.wl].dmg;
+      b.hp = b.max = Math.max(b.hp, Math.round(fp * 4));
+      G.banner = { text: WD().boss, life: 2.4 }; G.bT = 45; sfx.boss();
+    }
 
     // Geschosse
     for (const b of G.bullets) {
@@ -512,7 +520,7 @@
       let best = null, bz = 1e9, kind = 0;
       for (const g of G.gates) if (!g.done && !g.quiz && g.z >= b.pz - 0.6 && g.z <= b.z + 0.2 && g.z < bz) { best = g; bz = g.z; kind = 1; }
       for (const c of G.crates) if (!c.dead && Math.abs(b.x - c.x) < c.w / 2 && c.z >= b.pz - 0.6 && c.z <= b.z + 0.2 && c.z < bz) { best = c; bz = c.z; kind = 2; }
-      for (const z of G.zs) if (!z.dead && Math.abs(b.x - z.x) < z.r && z.z >= b.pz - 0.9 && z.z <= b.z + 0.3 && z.z < bz) { best = z; bz = z.z; kind = 3; }
+      for (const z of G.zs) if (!z.dead && !(z.type === 'boss' && z.z > BOSSZ) && Math.abs(b.x - z.x) < z.r && z.z >= b.pz - 0.9 && z.z <= b.z + 0.3 && z.z < bz) { best = z; bz = z.z; kind = 3; }
       if (!best) continue;
       b.dead = true;
       if (kind === 1) {
@@ -538,7 +546,7 @@
         while (G.lossAcc >= 1) { G.lossAcc -= 1; lose(1); if (!running) return; }
         continue;
       }
-      z.z -= z.sp * dt;
+      z.z -= (z.type === 'boss' && z.z > BOSSZ ? 7 : z.sp) * dt;
       z.x = clamp(z.x + clamp(G.px - z.x, -1, 1) * z.st * dt * (z.z < 15 ? 1.3 : 1), -0.97, 0.97);
       if (contact) {
         z.dead = true; const P = proj(z.x, z.z);
@@ -1014,7 +1022,7 @@
 
   function frame(ts) {
     const dt = Math.min(0.05, (ts - last) / 1000 || 0); last = ts;
-    if (running && !paused) update(dt * SPEEDS[SPEED].f);
+    if (running && !paused) update(dt * SPEEDS[SPEED].f * (1 + Math.min(0.5, G.t / 360)));
     else if (!running) { if (G.n > 0) G.dist += S * dt * 0.3; tickFx(dt); }
     draw(); hud();
     requestAnimationFrame(frame);
@@ -1034,12 +1042,12 @@
           '<dl><dt>Rechentore</dt><dd>Oben steht eine Aufgabe, links und rechts je ein Ergebnis. Lauf durch das richtige, dann kommen neue Kinder dazu.</dd>' +
           '<dt>Geschenke</dt><dd>Blaue Geschenke bringen eine bessere Wasserspritze, rosa Geschenke neue Kinder.</dd>' +
           '<dt>Luftballons</dt><dd>Jeder Ballon, der ankommt, schubst Kinder aus dem Spiel. Manchmal kommt ein ganzer Ballonschwarm, ab und zu ein Riesenballon mit Krone.</dd>' +
-          '<dt>Matschpfützen</dt><dd>Wer hineinläuft, rutscht aus: Du verlierst 10 bis 30 % deiner Kinder. Lauf drumherum.</dd></dl>'
+          '<dt>Matschpfützen</dt><dd>Wer hineinläuft, rutscht aus: Du verlierst 10 bis 30 % deiner Kinder, in kleinen Pfützen 1 bis 5 %. Lauf drumherum.</dd></dl>'
         : '<p>Dein Trupp schießt von selbst. Zieh mit dem Finger nach links oder rechts, um die Spur zu wechseln (am Rechner: Pfeiltasten).</p>' +
           '<dl><dt>Rechentore</dt><dd>Oben erscheint eine Aufgabe, links und rechts steht je ein Ergebnis. Lauf durch das richtige, dann gibt es Soldaten.</dd>' +
           '<dt>Kisten</dt><dd>Blaue Kisten bringen die nächste Waffe, grüne Kisten Verstärkung.</dd>' +
           '<dt>Zombies</dt><dd>Jeder Kontakt kostet Soldaten. Große Horden kommen über die ganze Straßenbreite. Bosse fressen sich durch, bis sie fallen.</dd>' +
-          '<dt>Feuerstellen</dt><dd>Wer durch brennendes Öl läuft, kostet dich 10 bis 30 % deiner Soldaten. Steuer den Trupp daran vorbei.</dd></dl>') +
+          '<dt>Feuerstellen</dt><dd>Wer durch brennendes Öl läuft, kostet dich 10 bis 30 % deiner Soldaten, kleine Brandstellen 1 bis 5 %. Steuer den Trupp daran vorbei.</dd></dl>') +
         '<div class="worlds" id="worlds"></div><div class="speeds" id="speeds"></div><div class="modes" id="modes"></div><button id="go">' + w.go + '</button>';
     } else {
       html = '<h1>' + w.over + '</h1>' +
