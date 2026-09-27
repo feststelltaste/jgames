@@ -64,6 +64,15 @@
   .modes .mode, .worlds .mode, .speeds .mode { text-align: left; background: transparent; color: var(--panelfg); border: 2px solid var(--line); padding: 8px 12px; font-size: 18px; }
   .modes .mode[aria-pressed="true"], .worlds .mode[aria-pressed="true"], .speeds .mode[aria-pressed="true"] { border-color: var(--accent); background: rgba(255,177,59,.16); }
   .modes .mode small { display: block; font-weight: 400; font-size: 14px; color: var(--panelmuted); }
+  .adv { border: 2px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+  .adv summary { cursor: pointer; font-size: 18px; font-weight: 600; }
+  .adv p { font-size: 15px; margin: 8px 0; color: var(--panelmuted); }
+  .rows { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .row { display: flex; align-items: center; justify-content: center; gap: 4px; border: 2px solid var(--line); border-radius: 8px; padding: 6px 2px; font-size: 18px; cursor: pointer; }
+  .row input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); }
+  .row:has(input:checked) { border-color: var(--accent); background: rgba(255,177,59,.16); }
+  .quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; }
+  .quick .mode { text-align: center; padding: 6px 2px; font-size: 16px; min-width: 0; }
   button:focus-visible { outline: 3px solid var(--panelfg); outline-offset: 3px; }
 </style>
 </head>
@@ -353,17 +362,41 @@
   const MODES = [
     { n: 'Einfach', d: 'Plus und Minus bis 20' },
     { n: 'Mittel', d: 'Plus, Minus, Mal und Geteilt bis 100' },
-    { n: 'Großes Einmaleins', d: 'Nur die Reihen 10 bis 20' }
+    { n: 'Großes Einmaleins', d: 'Nur die Reihen 10 bis 20' },
+    { n: 'Eigene Reihen', d: '' }
   ];
   let MODE = 0;
-  try { MODE = clamp(+localStorage.getItem('letzte-linie-mode') || 0, 0, 2); } catch (e) {}
-  function renderModes() {
+  try { MODE = clamp(+localStorage.getItem('letzte-linie-mode') || 0, 0, 3); } catch (e) {}
+  // Erweiterte Einstellungen: Einmaleins-Reihen 1–20 einzeln zum Üben ankreuzen
+  let ROWS = [2, 3, 4, 5];
+  try {
+    const v = localStorage.getItem('letzte-linie-rows');
+    if (v !== null) ROWS = v.split(',').map(Number).filter(r => r >= 1 && r <= 20);
+  } catch (e) {}
+  const rowsText = () => ROWS.length ? 'Reihen ' + ROWS.join(', ') : 'Noch keine Reihe angekreuzt';
+  function setMode(i) { MODE = i; try { localStorage.setItem('letzte-linie-mode', String(MODE)); } catch (e) {} }
+  function setRows(r) {
+    ROWS = [...new Set(r)].sort((a, b) => a - b); setMode(3);
+    try { localStorage.setItem('letzte-linie-rows', ROWS.join(',')); } catch (e) {}
+  }
+  function renderModes(advOpen) {
     const box = $('modes'); if (!box) return;
+    const open = advOpen !== undefined ? advOpen : MODE === 3;
+    MODES[3].d = rowsText();
     box.innerHTML = MODES.map((m, i) =>
-      '<button class="mode" data-i="' + i + '" aria-pressed="' + (i === MODE) + '">' + m.n + '<small>' + m.d + '</small></button>').join('');
-    box.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => {
-      MODE = +b.dataset.i; try { localStorage.setItem('letzte-linie-mode', String(MODE)); } catch (e) {}
-      renderModes();
+      '<button class="mode" data-i="' + i + '" aria-pressed="' + (i === MODE) + '">' + m.n + '<small>' + m.d + '</small></button>').join('') +
+      '<details class="adv"' + (open ? ' open' : '') + '><summary>⚙️ Erweiterte Einstellungen</summary>' +
+      '<p>Welche Einmaleins-Reihen willst du üben? Kreuz sie an.</p><div class="rows">' +
+      Array.from({ length: 20 }, (_, k) => k + 1).map(r =>
+        '<label class="row"><input type="checkbox" data-r="' + r + '"' + (ROWS.includes(r) ? ' checked' : '') + '><span>' + r + '</span></label>').join('') +
+      '</div><div class="quick"><button class="mode" data-q="1-10">1 bis 10</button><button class="mode" data-q="11-20">11 bis 20</button><button class="mode" data-q="none">Keine</button></div></details>';
+    box.querySelectorAll('.mode[data-i]').forEach(b => b.addEventListener('click', () => { setMode(+b.dataset.i); renderModes(); }));
+    box.querySelectorAll('.row input').forEach(c => c.addEventListener('change', () => {
+      const r = +c.dataset.r; setRows(c.checked ? ROWS.concat(r) : ROWS.filter(x => x !== r)); renderModes(true);
+    }));
+    box.querySelectorAll('.mode[data-q]').forEach(b => b.addEventListener('click', () => {
+      const q = b.dataset.q, range = (a, z) => Array.from({ length: z - a + 1 }, (_, k) => a + k);
+      setRows(q === 'none' ? [] : q === '1-10' ? range(1, 10) : range(11, 20)); renderModes(true);
     }));
   }
   function wrongFor(res, offs) {
@@ -379,6 +412,11 @@
       else if (r < 0.75) { do { a = ri(2, 10); b = ri(2, 10); } while (a * b >= 100); res = a * b; text = a + ' × ' + b; offs = [-a, a, -b, b, -1, 1]; }
       else { do { b = ri(2, 10); res = ri(2, 10); } while (b * res >= 100); a = b * res; text = a + ' : ' + b; offs = [-2, -1, 1, 2]; }
       return { text: text + ' = ?', res, wrong: wrongFor(res, offs) };
+    }
+    if (MODE === 3) {
+      const a = ROWS.length ? pick(ROWS) : ri(2, 10), b = ri(1, 10), res = a * b;
+      const text = Math.random() < 0.5 ? a + ' × ' + b : b + ' × ' + a;
+      return { text: text + ' = ?', res, wrong: wrongFor(res, [-a, a, -b, b, -1, 1]) };
     }
     if (MODE === 2) {
       const a = ri(10, 20), b = ri(2, 10), res = a * b;
