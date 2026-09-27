@@ -11,17 +11,17 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 // Pro Spiel: Seite, Fenstergröße (immer 4:3, das Bild wird auf 800×600 gebracht) und die Schritte,
 // um mitten ins Spielgeschehen zu kommen.
 const GAMES = {
-  'letzte-linie': { url: 'letzte-linie.html', play: async p => {
+  'letzte-linie': { url: 'letzte-linie/', play: async p => {
     await p.evaluate(() => { try { localStorage.setItem('letzte-linie-world', '1'); } catch (e) {} });
     await p.reload(); await wait(500);
     await p.click('#go'); await wait(9000);
   } },
-  'postamt': { url: 'postamt.html', vw: 1000, play: async p => {
+  'postamt': { url: 'postamt/', vw: 1000, play: async p => {
     await p.click('text=Spiel starten'); await wait(300);
     await p.click('#envGrid .item-btn >> nth=1'); await p.click('#stmpGrid .item-btn >> nth=1'); await wait(300);
   } },
-  'flussfahrt': { url: 'flussfahrt.html', vw: 1000, play: async p => { await p.evaluate(() => window.scrollTo(0, 0)); await wait(1500); } },
-  'anziehen': { url: 'anziehen.html', vw: 1200, play: async p => {
+  'flussfahrt': { url: 'flussfahrt/', vw: 1000, play: async p => { await p.evaluate(() => window.scrollTo(0, 0)); await wait(1500); } },
+  'anziehen': { url: 'anziehen/', vw: 1200, play: async p => {
     await wait(800);
     await p.evaluate(() => ['btn-hut-strohhut', 'btn-kleidung-latzhose', 'btn-accessoire-mistgabel'].forEach(id => document.getElementById(id).click()));
     await wait(800); await p.evaluate(() => window.scrollTo(0, 0));
