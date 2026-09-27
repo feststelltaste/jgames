@@ -46,8 +46,8 @@
     '<path d="M104 262Q120 268 136 262" stroke="' + SH + '" stroke-width="2" fill="none" stroke-linecap="round" opacity=".6"/>' +
     '<path d="' + BODY + '" fill="none" stroke="' + O + '" stroke-width="2.5" stroke-linejoin="round"/>' +
     // Ohren (klein und rund)
-    '<circle cx="78" cy="61" r="10" fill="' + FUR + '" stroke="' + O + '" stroke-width="2.5"/><circle cx="79" cy="62.5" r="4.8" fill="' + EAR + '"/>' +
-    '<circle cx="162" cy="61" r="10" fill="' + FUR + '" stroke="' + O + '" stroke-width="2.5"/><circle cx="161" cy="62.5" r="4.8" fill="' + EAR + '"/>' +
+    '<circle cx="69" cy="71" r="10" fill="' + FUR + '" stroke="' + O + '" stroke-width="2.5"/><circle cx="70.5" cy="72.5" r="4.8" fill="' + EAR + '"/>' +
+    '<circle cx="171" cy="71" r="10" fill="' + FUR + '" stroke="' + O + '" stroke-width="2.5"/><circle cx="169.5" cy="72.5" r="4.8" fill="' + EAR + '"/>' +
     // Kopf (kastenförmig, breite stumpfe Schnauze)
     '<path d="' + HEAD + '" fill="' + FUR + '"/>' +
     '<path d="M177 104C180 128 175 150 158 162C168 148 173 130 173 108Z" fill="' + SH + '"/>' +
@@ -125,7 +125,7 @@
       headTop: [120, 54],          // Scheitel (Kopfoberkante Mitte)
       hatLine: 64,                 // hier sitzt die Hutkrempe / das Hutband
       hatWidth: [65, 175],         // Kopfbreite auf der Hutlinie
-      ears: [[78, 61], [162, 61]], // Ohr-Mittelpunkte, Radius 10
+      ears: [[69, 71], [171, 71]], // Ohr-Mittelpunkte, Radius 10
       eyes: [[96, 92], [144, 92]], // Augen-Mittelpunkte (rx 7, ry 8)
       eyeLine: 92,
       nose: [120, 117],
