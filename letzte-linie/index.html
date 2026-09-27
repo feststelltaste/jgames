@@ -520,7 +520,7 @@
     if ((G.cT -= dt) <= 0) { spawnCrate(); G.cT = rnd(6.5, 9); }
     if ((G.bT -= dt) <= 0) {
       const b = makeZombie('boss', rnd(-0.4, 0.4), ZMAX + 2), fp = G.n * wp()[G.wl].rate * wp()[G.wl].dmg;
-      b.hp = b.max = Math.max(b.hp, Math.round(fp * 4));
+      b.hp = b.max = Math.max(b.hp, Math.round(fp * 4)) * 2;
       G.banner = { text: WD().boss, life: 2.4 }; G.bT = 45; sfx.boss();
     }
 
@@ -721,7 +721,7 @@
   function drawSoldier(so) {
     const P = proj(so.x, so.z), h = 0.19 * P.p * U;
     if (h < 2) return;
-    const x = P.x, y = P.y - Math.abs(Math.sin(G.t * 11 + so.i * 1.7)) * h * 0.03, sw = Math.sin(G.t * 11 + so.i * 1.7) * h * 0.07;
+    const mv = so.still ? 0 : 1, x = P.x, y = P.y - Math.abs(Math.sin(G.t * 11 + so.i * 1.7)) * h * 0.03 * mv, sw = Math.sin(G.t * 11 + so.i * 1.7) * h * 0.07 * mv;
     shadow(x, P.y, h * 0.26, h * 0.07);
     ctx.fillStyle = '#2f3524';
     ctx.fillRect(x - h * 0.13, y - h * 0.38, h * 0.1, h * 0.38 + sw);
@@ -853,7 +853,7 @@
   function drawKid(so) {
     const P = proj(so.x, so.z), h = 0.19 * P.p * U;
     if (h < 2) return;
-    const ph = G.t * 11 + so.i * 1.7, x = P.x, y = P.y - Math.abs(Math.sin(ph)) * h * 0.04, sw = Math.sin(ph) * h * 0.07;
+    const mv = so.still ? 0 : 1, ph = G.t * 11 + so.i * 1.7, x = P.x, y = P.y - Math.abs(Math.sin(ph)) * h * 0.04 * mv, sw = Math.sin(ph) * h * 0.07 * mv;
     const shirt = KIDSHIRTS[so.i % KIDSHIRTS.length], hair = HAIR[(so.i * 7) % HAIR.length];
     shadow(x, P.y, h * 0.24, h * 0.06);
     ctx.fillStyle = '#f1c7a1';
@@ -912,16 +912,33 @@
     }
   }
 
+  // Gerettete stehen still und winken mit einer weißen Fahne, damit man sie sieht
+  function whiteFlag(u, t) {
+    const P = proj(u.x, u.z), h = 0.19 * P.p * U;
+    if (h < 3) return;
+    const px = P.x - h * 0.2, top = P.y - h * 1.85, wave = Math.sin(t * 7 + u.i) * h * 0.08;
+    ctx.strokeStyle = '#7a5a3a'; ctx.lineWidth = Math.max(1, h * 0.035); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(px, P.y - h * 0.55); ctx.lineTo(px, top); ctx.stroke();
+    ctx.fillStyle = '#ffffff'; ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = Math.max(0.5, h * 0.015);
+    ctx.beginPath(); ctx.moveTo(px, top);
+    ctx.quadraticCurveTo(px + h * 0.3, top - wave, px + h * 0.6, top + wave * 0.5);
+    ctx.lineTo(px + h * 0.6, top + h * 0.4 + wave * 0.5);
+    ctx.quadraticCurveTo(px + h * 0.3, top + h * 0.4 - wave, px, top + h * 0.4);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
   function drawRescue(r) {
     if (r.z > ZMAX || r.z < -3) return;
     const G0 = proj(r.x, r.z), rw = r.w / 2 * U * G0.p, pulse = 0.5 + 0.5 * Math.sin(r.t * 6);
     ctx.fillStyle = WORLD ? `rgba(255,111,181,${0.18 + pulse * 0.15})` : `rgba(143,227,154,${0.15 + pulse * 0.15})`;
     ctx.beginPath(); ctx.ellipse(G0.x, G0.y, rw * 1.25, rw * 0.35, 0, 0, Math.PI * 2); ctx.fill();
+    const us = [];
     for (let i = 0; i < r.n; i++) {
       const a = i * 2.39996, d = 0.05 * Math.sqrt(i);
-      (WORLD ? drawKid : drawSoldier)({ x: r.x + Math.cos(a) * d * 1.4, z: r.z + Math.sin(a) * d * 4, i: 100 + i });
+      us.push({ x: r.x + Math.cos(a) * d * 1.4, z: r.z + Math.sin(a) * d * 4, i: 100 + i, still: true });
     }
-    const top = G0.y - 0.19 * G0.p * U - 14 - pulse * 4;
+    us.sort((a, b) => b.z - a.z);
+    for (const u of us) { (WORLD ? drawKid : drawSoldier)(u); whiteFlag(u, r.t); }
+    const top = G0.y - 0.19 * G0.p * U * 2.1 - 14 - pulse * 4;
     if (G0.p * U < 20) return;
     const txt = '+' + r.n; ctx.font = `15px ${HEAD}`;
     const bw = ctx.measureText(txt).width + 16;
@@ -1085,12 +1102,12 @@
         ? '<p>Deine Kinder zielen und spritzen ganz automatisch mit ihren Wasserpistolen. Du lenkst nur die Gruppe: Wisch mit dem Finger nach links oder rechts (am Computer: Pfeiltasten).</p>' +
           '<dl><dt>Rechentore</dt><dd>Oben steht eine Aufgabe, links und rechts je ein Ergebnis. Lauf durch das richtige, dann kommen neue Kinder dazu.</dd>' +
           '<dt>Geschenke</dt><dd>Blaue Geschenke bringen eine bessere Wasserspritze, rosa Geschenke neue Kinder.</dd>' +
-          '<dt>Luftballons</dt><dd>Jeder Ballon, der ankommt, schubst Kinder aus dem Spiel. Manchmal kommt ein ganzer Ballonschwarm: Spritzt du fast alle ab, warten dort 3 bis 7 Kinder, die du einsammeln kannst. Ab und zu kommt ein Riesenballon mit Krone.</dd>' +
+          '<dt>Luftballons</dt><dd>Jeder Ballon, der ankommt, schubst Kinder aus dem Spiel. Manchmal kommt ein ganzer Ballonschwarm: Spritzt du fast alle ab, warten dort 3 bis 7 befreite Kinder mit weißen Fahnen. Lauf hin und sammle sie ein. Ab und zu kommt ein Riesenballon mit Krone.</dd>' +
           '<dt>Matschpfützen</dt><dd>Wer hineinläuft, rutscht aus: Du verlierst 10 bis 30 % deiner Kinder, in kleinen Pfützen 1 bis 5 %. Lauf drumherum.</dd></dl>'
         : '<p>Dein Trupp zielt und schießt ganz automatisch. Du lenkst nur: Wisch mit dem Finger nach links oder rechts, um die Spur zu wechseln (am Computer: Pfeiltasten).</p>' +
           '<dl><dt>Rechentore</dt><dd>Oben erscheint eine Aufgabe, links und rechts steht je ein Ergebnis. Lauf durch das richtige, dann gibt es Soldaten.</dd>' +
           '<dt>Kisten</dt><dd>Blaue Kisten bringen die nächste Waffe, grüne Kisten Verstärkung.</dd>' +
-          '<dt>Zombies</dt><dd>Jeder Kontakt kostet Soldaten. Große Horden kommen über die ganze Straßenbreite: Schießt du fast alle ab, warten dort 3 bis 7 gerettete Soldaten, die du einsammeln kannst. Bosse fressen sich durch, bis sie fallen.</dd>' +
+          '<dt>Zombies</dt><dd>Jeder Kontakt kostet Soldaten. Große Horden kommen über die ganze Straßenbreite: Schießt du fast alle ab, warten dort 3 bis 7 gerettete Soldaten mit weißen Fahnen. Lauf hin und sammle sie ein. Bosse fressen sich durch, bis sie fallen.</dd>' +
           '<dt>Feuerstellen</dt><dd>Wer durch brennendes Öl läuft, kostet dich 10 bis 30 % deiner Soldaten, kleine Brandstellen 1 bis 5 %. Steuer den Trupp daran vorbei.</dd></dl>');
     } else {
       html = '<h1>' + w.over + '</h1>' +
