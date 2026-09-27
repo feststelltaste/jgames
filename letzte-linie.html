@@ -490,8 +490,10 @@
       if (!h.done && h.z + h.len / 2 <= 0) {
         h.done = true;
         const inside = G.form.filter(so => Math.abs(so.x - h.x) < h.w / 2).length;
-        if (inside > 0 && G.form.length) {
-          const k = Math.max(1, Math.round(G.n * inside / G.form.length)), P = proj(h.x, 0);
+        // Verlust 10–30 % des Trupps, je nachdem wie viele hineinlaufen; der letzte Mann bleibt
+        const k = inside > 0 && G.form.length ? Math.min(G.n - 1, Math.max(1, Math.round(G.n * (0.1 + 0.2 * inside / G.form.length)))) : 0;
+        if (k > 0) {
+          const P = proj(h.x, 0);
           burst(P.x, P.y - 10, WORLD ? '#8b5e3c' : '#ff8a2b', 10 + k * 2);
           floatT(P.x, P.y - U * 0.35, '−' + k + ' ' + WD().hazard, WORLD ? '#a8744c' : '#ff8a2b', 22);
           lose(k); if (!running) return;
@@ -1032,12 +1034,12 @@
           '<dl><dt>Rechentore</dt><dd>Oben steht eine Aufgabe, links und rechts je ein Ergebnis. Lauf durch das richtige, dann kommen neue Kinder dazu.</dd>' +
           '<dt>Geschenke</dt><dd>Blaue Geschenke bringen eine bessere Wasserspritze, rosa Geschenke neue Kinder.</dd>' +
           '<dt>Luftballons</dt><dd>Jeder Ballon, der ankommt, schubst Kinder aus dem Spiel. Manchmal kommt ein ganzer Ballonschwarm, ab und zu ein Riesenballon mit Krone.</dd>' +
-          '<dt>Matschpfützen</dt><dd>Wer hineinläuft, rutscht aus und ist raus. Lauf drumherum.</dd></dl>'
+          '<dt>Matschpfützen</dt><dd>Wer hineinläuft, rutscht aus: Du verlierst 10 bis 30 % deiner Kinder. Lauf drumherum.</dd></dl>'
         : '<p>Dein Trupp schießt von selbst. Zieh mit dem Finger nach links oder rechts, um die Spur zu wechseln (am Rechner: Pfeiltasten).</p>' +
           '<dl><dt>Rechentore</dt><dd>Oben erscheint eine Aufgabe, links und rechts steht je ein Ergebnis. Lauf durch das richtige, dann gibt es Soldaten.</dd>' +
           '<dt>Kisten</dt><dd>Blaue Kisten bringen die nächste Waffe, grüne Kisten Verstärkung.</dd>' +
           '<dt>Zombies</dt><dd>Jeder Kontakt kostet Soldaten. Große Horden kommen über die ganze Straßenbreite. Bosse fressen sich durch, bis sie fallen.</dd>' +
-          '<dt>Feuerstellen</dt><dd>Wer durch brennendes Öl läuft, ist verloren. Steuer den Trupp daran vorbei.</dd></dl>') +
+          '<dt>Feuerstellen</dt><dd>Wer durch brennendes Öl läuft, kostet dich 10 bis 30 % deiner Soldaten. Steuer den Trupp daran vorbei.</dd></dl>') +
         '<div class="worlds" id="worlds"></div><div class="speeds" id="speeds"></div><div class="modes" id="modes"></div><button id="go">' + w.go + '</button>';
     } else {
       html = '<h1>' + w.over + '</h1>' +
