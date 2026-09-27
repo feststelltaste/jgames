@@ -333,7 +333,7 @@
             ]
         };
 
-        // --- SVG RENDER FUNCTIONS (removed - items loaded from anziehen/ SVG files) ---
+        // --- SVG RENDER FUNCTIONS (removed - items loaded from the SVG files next to this page) ---
 
         // --- DEBUG MODE ---
         const DEBUG = new URLSearchParams(location.search).has('debug');
@@ -400,7 +400,7 @@
             if (!window.baseCapybaraContent) {
                 try {
                     const bust = DEBUG ? `?t=${debugTick}` : '';
-                    const response = await fetch(`anziehen/capybara.svg${bust}`);
+                    const response = await fetch(`capybara.svg${bust}`);
                     const svgText = await response.text();
 
                     // Extract content between <svg> tags
@@ -421,7 +421,7 @@
             // overlaid at the same position/size as the capybara layer.
             const bust = DEBUG ? `?t=${debugTick}` : '';
             const itemImg = (cat, id) =>
-                `<image href="anziehen/${cat}/${id}.svg${bust}" x="45" y="50" width="210" height="297"/>`;
+                `<image href="${cat}/${id}.svg${bust}" x="45" y="50" width="210" height="297"/>`;
 
             const capySVG = `
             <svg width="300" height="400" viewBox="0 0 300 400">
