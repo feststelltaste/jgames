@@ -597,7 +597,7 @@
 
   // ---------- Spielzustand ----------
   const ROUNDS = 5;
-  const S = { mode: 'menu', theme: null, scene: 'strand', worn: {}, offer: {}, tab: 'kopf', round: 0, results: [], hints: 0, hintOn: false, timeLeft: 0, timerId: null, busy: false, used: [] };
+  const S = { mode: 'menu', theme: null, scene: 'strand', worn: {}, offer: {}, tab: 'kopf', round: 0, results: [], hints: 0, hintId: null, timeLeft: 0, timerId: null, busy: false, used: [] };
   const album = store.get('album', {});
 
   function makeOffer(theme) {
@@ -627,7 +627,7 @@
   // ---------- Panel ----------
   function renderTabs() {
     $('tabs').innerHTML = SLOTS.map(sl => {
-      const hasHint = S.hintOn && S.theme && S.offer[sl.id].some(id => pts(IT[id], S.theme.name) >= 70) && !(S.worn[sl.id] && pts(IT[S.worn[sl.id]], S.theme.name) >= 70);
+      const hasHint = hintOpen() && IT[S.hintId].slot === sl.id;
       return '<button class="tab" role="tab" data-s="' + sl.id + '" aria-selected="' + (S.tab === sl.id) + '"><span class="ti">' + sl.icon + '</span>' + sl.name +
         (S.worn[sl.id] ? '<span class="dot" aria-hidden="true"></span>' : '') + (hasHint ? '<span class="hdot" aria-hidden="true">✨</span>' : '') + '</button>';
     }).join('');
@@ -635,7 +635,7 @@
   function renderGrid(fresh) {
     const ids = S.offer[S.tab] || [];
     $('grid').innerHTML = ids.map((id, n) => {
-      const it = IT[id], on = S.worn[S.tab] === id, hint = S.hintOn && S.theme && pts(it, S.theme.name) >= 70;
+      const it = IT[id], on = S.worn[S.tab] === id, hint = hintOpen() && id === S.hintId;
       return '<button class="item' + (on ? ' on' : '') + (hint ? ' hint' : '') + (fresh ? ' new' : '') + '" style="' + (fresh ? 'animation-delay:' + (n * 25) + 'ms' : '') + '" data-id="' + esc(id) + '" aria-pressed="' + on + '" aria-label="' + esc(it.name) + '">' +
         thumbSvg(it) + '<span class="lbl">' + esc(it.name) + '</span></button>';
     }).join('');
@@ -644,7 +644,7 @@
     const a = $('actions');
     if (S.mode === 'show') {
       const d = DIFFS[diff], hintTxt = d.hints === Infinity ? '' : '<span class="cnt">' + S.hints + '</span>';
-      a.innerHTML = (d.hints > 0 ? '<button class="act" id="aHint"' + (S.hints > 0 && !S.hintOn ? '' : ' disabled') + '><span class="e">💡</span>Tipp ' + hintTxt + '</button>' : '') +
+      a.innerHTML = (d.hints > 0 ? '<button class="act" id="aHint"' + (S.hints > 0 && !hintOpen() ? '' : ' disabled') + '><span class="e">💡</span>Tipp ' + hintTxt + '</button>' : '') +
         '<button class="act" id="aClear" aria-label="Alles ausziehen"><span class="e">🧺</span></button>' +
         '<button class="act primary" id="aDone"><span class="e">📸</span>Fertig!</button>';
     } else {
@@ -668,7 +668,7 @@
       S.worn[slot] = id; sfx.on(); renderStage(id);
       if (S.mode === 'show' && diff === 0 && pts(it, S.theme.name) >= 70) { setTimeout(sfx.good, 120); hearts(); }
     }
-    renderTabs(); renderGrid(false);
+    renderPanel(false);
     if (S.mode === 'free') store.set('free', { worn: S.worn, scene: S.scene });
   }
   function hearts() {
@@ -728,7 +728,7 @@
       '<div><span class="e">🎯</span>Oben steht das Thema. Tippe auf 🔈 zum Vorlesen.</div>' +
       '<div><span class="e">👆</span>Tippe auf ein Bild zum Anziehen. Nochmal tippen zieht es aus.</div>' +
       '<div><span class="e">🎩</span>Es gibt 4 Fächer: Hut, Kleidung, Extra und Zubehör.</div>' +
-      '<div><span class="e">💡</span>Der Tipp zeigt dir passende Teile mit ✨.</div>' +
+      '<div><span class="e">💡</span>Der Tipp zeigt dir ein passendes Teil mit ✨.</div>' +
       '<div><span class="e">📸</span>Bei „Fertig!“ läuft das Capybara über den Laufsteg und die Jury vergibt bis zu 3 ⭐.</div>' +
       '<div><span class="e">📒</span>Im Album sammelst du deine besten Outfits.</div></div>' +
       '<div class="kbd">Tasten: 1–4 Fach · H Tipp · Enter Fertig · M Ton</div>' +
@@ -764,7 +764,7 @@
   function nextRound() {
     stopTimer();
     S.theme = S.used[S.round]; S.scene = S.theme.scene; S.worn = {}; S.tab = 'kopf';
-    S.offer = makeOffer(S.theme.name); S.hints = DIFFS[diff].hints; S.hintOn = false; S.busy = true;
+    S.offer = makeOffer(S.theme.name); S.hints = DIFFS[diff].hints; S.hintId = null; S.busy = true;
     $('banner').classList.remove('hidden'); $('speak').classList.remove('hidden');
     setBanner(S.theme.icon, S.theme.name, false);
     renderStage(); renderPanel(true); hudShow();
@@ -793,12 +793,17 @@
   function stopTimer() { clearInterval(S.timerId); S.timerId = null; }
   function updTimer() { const t = $('timer'); t.textContent = '⏱ ' + Math.max(0, S.timeLeft); t.classList.toggle('low', S.timeLeft <= 10); }
 
+  // Tipp: verrät zufällig genau ein passendes Teil aus einem Fach, das noch nicht gut besetzt ist
+  const hintOpen = () => !!(S.hintId && S.theme && S.worn[IT[S.hintId].slot] !== S.hintId);
   function useHint() {
-    if (S.mode !== 'show' || S.busy || S.hints <= 0 || S.hintOn) return;
-    S.hintOn = true; if (S.hints !== Infinity) S.hints--;
+    if (S.mode !== 'show' || S.busy || S.hints <= 0 || hintOpen()) return;
+    const th = S.theme.name;
+    const cands = SLOTS.filter(sl => !(S.worn[sl.id] && pts(IT[S.worn[sl.id]], th) >= 70))
+      .flatMap(sl => S.offer[sl.id].filter(id => pts(IT[id], th) >= 70));
+    if (!cands.length) { toast('Alles passt schon – super!'); return; }
+    S.hintId = pick(cands); if (S.hints !== Infinity) S.hints--;
+    S.tab = IT[S.hintId].slot;
     sfx.hint(); renderPanel(false);
-    const t = SLOTS.find(sl => S.offer[sl.id].some(id => pts(IT[id], S.theme.name) >= 70) && !(S.worn[sl.id] && pts(IT[S.worn[sl.id]], S.theme.name) >= 70));
-    if (t && t.id !== S.tab) { S.tab = t.id; renderTabs(); renderGrid(false); }
   }
 
   function evaluate() {
@@ -899,7 +904,7 @@
   function startFree(init) {
     stopTimer(); musicStop(); hideCard();
     const saved = init || store.get('free', null) || {};
-    S.mode = 'free'; S.theme = null; S.busy = false; S.hintOn = false; S.tab = 'kopf';
+    S.mode = 'free'; S.theme = null; S.busy = false; S.hintId = null; S.tab = 'kopf';
     S.worn = {}; if (saved.worn) for (const k in saved.worn) if (IT[saved.worn[k]] && IT[saved.worn[k]].slot === k) S.worn[k] = saved.worn[k];
     S.scene = SCENES[saved.scene] ? saved.scene : 'strand';
     S.offer = {}; SLOTS.forEach(sl => S.offer[sl.id] = itemsOf(sl.id).map(i => i.id));
