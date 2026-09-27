@@ -149,10 +149,10 @@
       return s + '<circle cx="' + cx + '" cy="' + cy + '" r="11" fill="#ff9ecb"/><circle cx="' + cx + '" cy="' + cy + '" r="7" fill="#ffc4e0"/>' +
         '<circle cx="' + (cx - 5) + '" cy="' + (cy - 6) + '" r="3"' + HL + '/>';
     }
-    add('ohrenschützer', [52, 38, 136, 48],
-      '<path d="M76 62Q74 42 120 46Q166 42 164 62" stroke="' + O + '" stroke-width="9" fill="none" stroke-linecap="round"/>' +
-      '<path d="M76 62Q74 42 120 46Q166 42 164 62" stroke="#8e7cc3" stroke-width="4.5" fill="none" stroke-linecap="round"/>' +
-      muff(74, 64) + muff(166, 64),
+    add('ohrenschützer', [46, 36, 148, 54],
+      '<path d="M70 69Q64 40 120 44Q176 40 170 69" stroke="' + O + '" stroke-width="9" fill="none" stroke-linecap="round"/>' +
+      '<path d="M70 69Q64 40 120 44Q176 40 170 69" stroke="#8e7cc3" stroke-width="4.5" fill="none" stroke-linecap="round"/>' +
+      muff(69, 72) + muff(171, 72),
       { keepOrange: true });
   })();
 
